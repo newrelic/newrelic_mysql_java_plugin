@@ -13,12 +13,12 @@ Configuring your environment
   3.  MySQL properties
   
   
- 1. New Relic License
+1. New Relic License
 
  $ cp config/newrelic.properties.example config/newrelic.properties
- $# Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
+ # Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
 
- 2. MySQL Privileges
+2. MySQL Privileges
 
 When deploying a MySQL plugin on each MySQL server, you require the following MySQL user privileges.
 
@@ -29,11 +29,11 @@ When deploying a MySQL Plugin on a common server, the necessary change is to gra
 or host mask, changing the value of localhost in the 2 SQL statements appropriately.
 
 
- 3. MySQL Properties
+3. MySQL Properties
 
 
  $ cp config/mysql.instance.json.sample config/mysql.instance.json
- $ # Edit config/mysql.instance.json
+ # Edit config/mysql.instance.json
 
 If you have configured the Agent to run on the MySQL instance, and used the MySQL user privileges in the 
 previous step, you only need to give your MySQL instance a meaningful name.  All other options are default.
