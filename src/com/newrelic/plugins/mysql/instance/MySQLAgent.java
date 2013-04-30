@@ -32,7 +32,8 @@ public class MySQLAgent extends Agent {
 	private String user;
 	private String passwd;
 	private String metrics;
- 	private Map<String, MetricMeta> metricsMeta;						// Definition of MySQL meta data (counter, unit, type etc)
+ 	private Map<String, MetricMeta> metricsMeta = 						// Definition of MySQL meta data (counter, unit, type etc)
+ 			new HashMap<String, MetricMeta>();							
 
 	public MySQLAgent(String name, String host, String user, String passwd, String metrics) {
 	   	super(GUID, version);
@@ -44,7 +45,7 @@ public class MySQLAgent extends Agent {
 	   	
 	   	logger = Context.getLogger();									// Set logging to current Context
 	   	MySQL.setLogger(logger);										// Push logger to MySQL context
-	   	setMetricsMeta(createMetaData());								// Define incremental counters that are value/sec etc
+	   	createMetaData();												// Define incremental counters that are value/sec etc
 	}
 	
 	/**
@@ -67,7 +68,7 @@ public class MySQLAgent extends Agent {
 	 	Map<String,String> results = new HashMap<String,String>();		// Create an empty set of results
 	 	
 	 	Map<String,String> SQL = new HashMap<String,String>();
-	 	SQL.put("status", "SHOW GLOBAL STATUS LIKE 'bytes%'");
+	 	SQL.put("status", "SHOW GLOBAL STATUS LIKE 'com_select%'");
 	 	SQL.put("slave",  "SHOW SLAVE STATUS");
 	 	SQL.put("master", "SHOW MASTER STATUS");
 	 	SQL.put("innodb", "SHOW ENGINE INNODB STATUS");
@@ -80,8 +81,18 @@ public class MySQLAgent extends Agent {
 	 		if (metrics.contains(category)) 
 	 			results.putAll(MySQL.runSQL(c, category, SQL.get(category)));
 	 	}
-
+//	 	results.putAll(newRelicMetrics(results));
  		return results;
+	}
+
+	private Map<String, String> newRelicMetrics(Map<String, String> existing) {
+    	Map<String, String> results = new HashMap<String,String>();
+
+		results.put("newrelic/reads", String.valueOf((int)Integer.parseInt(existing.get("com_select")) + (int)Integer.parseInt(existing.get("qcache_hits"))));
+		results.put("newrelic/writes", String.valueOf( (int)Integer.parseInt(existing.get("com_insert")) + 
+				                                       (int)Integer.parseInt(existing.get("com_update")) + 
+				                                       (int)Integer.parseInt(existing.get("com_delete"))));
+		return results;
 	}
 
 	/**
@@ -97,11 +108,12 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		String val = (String)results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.fine("Metric " + ++i + " " + key + ":" + val);
-	 		if (MetricMeta.FLOAT_TYPE.equals(md.getType())) {			// We are working with a float value
+	 		logger.info("Metric " + ++i + " " + key + ":" + val + " " + (md.isCounter() ? "counter" : ""));
+	 		if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
+	 		//if (MetricMeta.FLOAT_TYPE.equals(md.getType())) {			
 	 			try {
 	 				float floatval = (float)Float.parseFloat(results.get(key));
-	 				reportMetric(key, "value", floatval); 
+	 				reportMetric(key, md.getUnit(), floatval); 
 	 			} catch (Exception e) {
 	 				logger.warning("Unable to parse float value " + val + " for " + key);
 	 			}
@@ -110,9 +122,10 @@ public class MySQLAgent extends Agent {
 	 				int intval = (int)Integer.parseInt(results.get(key));
 	 				if (md.isCounter()) {
 	 					float floatval = md.getCounter().process(intval).floatValue();
-	 					reportMetric(key , "value/sec", floatval);
+	 					logger.info("Counter " + md.getUnit() + " " + floatval);
+	 					reportMetric(key , md.getUnit(), floatval);
 	 				} else {
-	 					reportMetric(key , "value", intval);
+	 					reportMetric(key , md.getUnit(), intval);
 	 				}
 	 			} catch (Exception e) {
 	 				logger.warning("Unable to parse int value " + val + " for " + key);
@@ -121,12 +134,10 @@ public class MySQLAgent extends Agent {
 	 	}
 	}
 
-	private Map<String, MetricMeta> createMetaData() {
-		Map<String,MetricMeta> c = new HashMap<String,MetricMeta>();
-	
-		c.put("bytes_received", new MetricMeta(true, "bytes/sec"));
-		c.put("bytes_sent", new MetricMeta(true, "bytes/sec"));
-		return c;
+	private void createMetaData() {
+		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("status/bytes_sent", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("status/com_select", new MetricMeta(true, "ops/sec"));
 	}
   
 	@Override
@@ -146,14 +157,14 @@ public class MySQLAgent extends Agent {
 	private MetricMeta getMetricMeta(String key) {
  		MetricMeta md = (MetricMeta)metricsMeta.get(key);
  		if (md == null) {
- 			metricsMeta.put(key, MetricMeta.defaultMetricMeta());
+			logger.info("Adding default metric for " + key);
+			addMetricMeta(key, MetricMeta.defaultMetricMeta());
  	 		md = (MetricMeta)metricsMeta.get(key);
  		}
  		return md;
 	}
 
-	private void setMetricsMeta(Map<String, MetricMeta> mm) {
-		this.metricsMeta = mm;
-		
+	private void addMetricMeta(String key, MetricMeta mm) {
+		metricsMeta.put(key, mm); 		
 	}
 }
