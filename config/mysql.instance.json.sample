@@ -1,0 +1,9 @@
+[
+	{
+		"name" : "Server/Instance Name"
+	},
+	{
+		"name" : "Demo 1",
+                "host" : "10.42.0.250"
+	}
+]
