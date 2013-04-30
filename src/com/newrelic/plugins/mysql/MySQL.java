@@ -71,6 +71,8 @@ public class MySQL {
 	 * This method is optimized for queries designed to produce New Relic
 	 * compatible type results
 	 * 
+	 * TODO: A future improvement is to create a String/Number map
+	 * 
 	 * @param c Connection
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs

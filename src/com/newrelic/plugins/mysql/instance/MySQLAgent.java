@@ -11,9 +11,17 @@ import java.util.logging.Logger;
 import com.newrelic.data.in.Agent;
 import com.newrelic.data.in.binding.Context;
 import com.newrelic.data.in.processors.EpochCounter;
+import com.newrelic.plugins.mysql.MetricMeta;
 import com.newrelic.plugins.mysql.MySQL;
 
-
+/**
+ * This class creates a specific MySQL agent that is used to 
+ * obtain a MySQL database connection, gather requested metrics
+ * and report to New Relic
+ * 
+ * @author Ronald Bradford me@ronaldbradford.com
+ *
+ */
 public class MySQLAgent extends Agent {
 	final static String GUID = "com.newrelic.plugins.mysql.instance";
 	final static String version = "0.1.0";
@@ -24,8 +32,7 @@ public class MySQLAgent extends Agent {
 	private String user;
 	private String passwd;
 	private String metrics;
- 	private Map<String,EpochCounter> counters = 						// Definition of MySQL metrics that
- 						new HashMap<String,EpochCounter>();				// are incremental counters
+ 	private Map<String, MetricMeta> metricsMeta;						// Definition of MySQL meta data (counter, unit, type etc)
 
 	public MySQLAgent(String name, String host, String user, String passwd, String metrics) {
 	   	super(GUID, version);
@@ -33,11 +40,11 @@ public class MySQLAgent extends Agent {
 	   	this.host = host;
 	   	this.user = user;
 	   	this.passwd = passwd;
-	   	this.metrics = metrics;
+	   	this.metrics = metrics.toLowerCase();
 	   	
 	   	logger = Context.getLogger();									// Set logging to current Context
 	   	MySQL.setLogger(logger);										// Push logger to MySQL context
-	   	setCounters(createCounters());									// Define incremental counters that are value/sec
+	   	setMetricsMeta(createMetaData());								// Define incremental counters that are value/sec etc
 	}
 	
 	/**
@@ -58,9 +65,21 @@ public class MySQLAgent extends Agent {
 	 */
 	private Map<String, String> gatherMetrics(Connection c, String metrics) {
 	 	Map<String,String> results = new HashMap<String,String>();		// Create an empty set of results
+	 	
+	 	Map<String,String> SQL = new HashMap<String,String>();
+	 	SQL.put("status", "SHOW GLOBAL STATUS LIKE 'bytes%'");
+	 	SQL.put("slave",  "SHOW SLAVE STATUS");
+	 	SQL.put("master", "SHOW MASTER STATUS");
+	 	SQL.put("innodb", "SHOW ENGINE INNODB STATUS");
+	 	SQL.put("mutex",  "SHOW ENGINE INNODB MUTEX");
+	 	
 
-	 	// TODO: This is where we introduce additional commands based on values of metrics
-	 	results.putAll(MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'bytes%'")); 
+	 	Iterator<String> iter = SQL.keySet().iterator();			
+	 	while (iter.hasNext()) {
+	 		String category = (String)iter.next();
+	 		if (metrics.contains(category)) 
+	 			results.putAll(MySQL.runSQL(c, category, SQL.get(category)));
+	 	}
 
  		return results;
 	}
@@ -73,23 +92,24 @@ public class MySQLAgent extends Agent {
 	 	logger.info("Reporting " + results.size() + " metrics");
 	 	logger.finest(results.toString());
 	 	int i=0;
-	 	Iterator<String> iter = results.keySet().iterator();			// Iterate over current metrics
-	 	while (iter.hasNext()) {
-	 		String key = (String)iter.next();
+	 	Iterator<String> iter = results.keySet().iterator();			
+	 	while (iter.hasNext()) {										// Iterate over current metrics	
+	 		String key = (String)iter.next().toLowerCase();
 	 		String val = (String)results.get(key);
+	 		MetricMeta md = getMetricMeta(key);
 	 		logger.fine("Metric " + ++i + " " + key + ":" + val);
-	 		if (val.matches("\\.")) {
+	 		if (MetricMeta.FLOAT_TYPE.equals(md.getType())) {			// We are working with a float value
 	 			try {
 	 				float floatval = (float)Float.parseFloat(results.get(key));
-	 				reportMetric(key.toLowerCase(), "value", floatval); 
+	 				reportMetric(key, "value", floatval); 
 	 			} catch (Exception e) {
 	 				logger.warning("Unable to parse float value " + val + " for " + key);
 	 			}
-	 		} else {
+	 		} else {													// We are working with an integer value
 	 			try {
 	 				int intval = (int)Integer.parseInt(results.get(key));
-	 				if (getCounters().containsKey(key)) {
-	 					float floatval = getCounters().get(key).process(intval).floatValue();
+	 				if (md.isCounter()) {
+	 					float floatval = md.getCounter().process(intval).floatValue();
 	 					reportMetric(key , "value/sec", floatval);
 	 				} else {
 	 					reportMetric(key , "value", intval);
@@ -101,34 +121,39 @@ public class MySQLAgent extends Agent {
 	 	}
 	}
 
-
- 
-  	private Map<String, EpochCounter> createCounters() {
-		Map<String,EpochCounter> c = new HashMap<String,EpochCounter>();
-		Set<String> s = new HashSet<String>();
-
-		// Quick Hack
-		s.add("bytes_received");
-		s.add("bytes_sent");
-		
-	 	Iterator<String> iter = s.iterator();
-	 	while (iter.hasNext()) {
-	 		c.put((String)iter.next(), new EpochCounter());
-	 	}
-		
+	private Map<String, MetricMeta> createMetaData() {
+		Map<String,MetricMeta> c = new HashMap<String,MetricMeta>();
+	
+		c.put("bytes_received", new MetricMeta(true, "bytes/sec"));
+		c.put("bytes_sent", new MetricMeta(true, "bytes/sec"));
 		return c;
 	}
-
-
+  
 	@Override
 	public String getComponentHumanLabel() {
 		return name;
 	}
-	public Map<String,EpochCounter> getCounters() {
-		return counters;
+
+	/**
+	 * This provides a lazy instantiation of a MySQL metric where no meta data was defined
+	 * and means new metrics can be captured automatically.
+	 * 
+	 * A default metric is a integer value
+	 * 
+	 * @param key
+	 * @return
+	 */
+	private MetricMeta getMetricMeta(String key) {
+ 		MetricMeta md = (MetricMeta)metricsMeta.get(key);
+ 		if (md == null) {
+ 			metricsMeta.put(key, MetricMeta.defaultMetricMeta());
+ 	 		md = (MetricMeta)metricsMeta.get(key);
+ 		}
+ 		return md;
 	}
-	
-	public void setCounters(Map<String,EpochCounter> counters) {
-		this.counters = counters;
+
+	private void setMetricsMeta(Map<String, MetricMeta> mm) {
+		this.metricsMeta = mm;
+		
 	}
 }
