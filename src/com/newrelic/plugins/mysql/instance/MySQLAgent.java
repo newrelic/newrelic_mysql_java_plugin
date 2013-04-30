@@ -55,7 +55,7 @@ public class MySQLAgent extends Agent {
 		Connection c = MySQL.getConnection(host, user, passwd);			// Get a database connection (which should be cached)
 		if (c == null) return;											// Unable to continue without a valid database connection
 	 	
-		Map<String,String> results = gatherMetrics(c, metrics);			// Gather defined metrics 
+		Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics 
 		reportMetrics(results);											// Report Metrics to New Relic
 	}
 
@@ -64,8 +64,8 @@ public class MySQLAgent extends Agent {
 	 * @param c
 	 * @return
 	 */
-	private Map<String, String> gatherMetrics(Connection c, String metrics) {
-	 	Map<String,String> results = new HashMap<String,String>();		// Create an empty set of results
+	private Map<String, Number> gatherMetrics(Connection c, String metrics) {
+	 	Map<String,Number> results = new HashMap<String,Number>();		// Create an empty set of results
 	 	
 	 	Map<String,String> SQL = new HashMap<String,String>();
 	 	SQL.put("status", "SHOW GLOBAL STATUS LIKE 'com_select%'");
@@ -99,37 +99,26 @@ public class MySQLAgent extends Agent {
 	 * 
 	 * @param results
 	 */
-	public void reportMetrics(Map<String,String> results) { 
+	public void reportMetrics(Map<String,Number> results) { 
 	 	logger.info("Reporting " + results.size() + " metrics");
 	 	logger.finest(results.toString());
 	 	int i=0;
 	 	Iterator<String> iter = results.keySet().iterator();			
 	 	while (iter.hasNext()) {										// Iterate over current metrics	
 	 		String key = (String)iter.next().toLowerCase();
-	 		String val = (String)results.get(key);
+	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
 	 		logger.info("Metric " + ++i + " " + key + ":" + val + " " + (md.isCounter() ? "counter" : ""));
-	 		if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
+	 		if (java.lang.Float.class.equals(results.get(key).getClass())) {							// We are working with a float value
 	 		//if (MetricMeta.FLOAT_TYPE.equals(md.getType())) {			
-	 			try {
-	 				float floatval = (float)Float.parseFloat(results.get(key));
-	 				reportMetric(key, md.getUnit(), floatval); 
-	 			} catch (Exception e) {
-	 				logger.warning("Unable to parse float value " + val + " for " + key);
-	 			}
+ 				reportMetric(key, md.getUnit(), val.floatValue()); 
 	 		} else {													// We are working with an integer value
-	 			try {
-	 				int intval = (int)Integer.parseInt(results.get(key));
-	 				if (md.isCounter()) {
-	 					float floatval = md.getCounter().process(intval).floatValue();
-	 					logger.info("Counter " + md.getUnit() + " " + floatval);
-	 					reportMetric(key , md.getUnit(), floatval);
-	 				} else {
-	 					reportMetric(key , md.getUnit(), intval);
-	 				}
-	 			} catch (Exception e) {
-	 				logger.warning("Unable to parse int value " + val + " for " + key);
-	 			}
+ 				if (md.isCounter()) {
+ //					logger.info("Counter " + md.getUnit() + " " + md.getCounter().process(val).floatValue());
+ 					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
+ 				} else {
+ 					reportMetric(key , md.getUnit(), val.intValue());
+ 				}
 	 		}
 	 	}
 	}

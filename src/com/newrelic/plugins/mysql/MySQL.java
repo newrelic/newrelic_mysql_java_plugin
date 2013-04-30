@@ -77,10 +77,24 @@ public class MySQL {
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs
 	 */
-    public static Map<String,String> runSQL(Connection c, String category, String SQL, Boolean singleRow) {
+	
+	public static Number translateStringToNumber(String val) {
+		try {
+			 if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
+ 				return (float)Float.parseFloat(val);
+			 } else {
+ 				return (int)Integer.parseInt(val);
+			 }
+		} catch (Exception e) {
+ 			logger.warning("Unable to parse int/float number from value " + val);
+ 		}
+		return 0;
+	}
+	
+    public static Map<String,Number> runSQL(Connection c, String category, String SQL, Boolean singleRow) {
     	Statement stmt = null;
     	ResultSet rs = null;
-    	Map<String, String> results = new HashMap<String,String>();
+    	Map<String, Number> results = new HashMap<String,Number>();
 	    try {
 	    	logger.info("Running " + SQL);
 			stmt = c.createStatement();
@@ -92,7 +106,7 @@ public class MySQL {
             		for (int i=1; i <= md.getColumnCount();i++) {		// use column names as the "key"
             			if (validMetricValue(rs.getString(i)))
             				results.put(category + SEPARATOR + md.getColumnName(i).toLowerCase(),
-            							transformStringMetric(rs.getString(i)));
+            							translateStringToNumber(transformStringMetric(rs.getString(i))));
             		}
             	}
             } else {										            // This SQL statement return a key/value pair set of rows
@@ -100,7 +114,7 @@ public class MySQL {
 	            while (rs.next()) {
 	            	if (validMetricValue(rs.getString(2)))
 	            		results.put(category + SEPARATOR + rs.getString(1).toLowerCase(),
-	            					transformStringMetric(rs.getString(2)));
+	            					translateStringToNumber(transformStringMetric(rs.getString(2))));
 	            } 														// If there are more than 2 columns, disregard additional columns
 		           
             }
@@ -125,7 +139,7 @@ public class MySQL {
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs
      */
-	public static  Map<String,String> runSQL(Connection c, String category, String SQL) {
+	public static  Map<String,Number> runSQL(Connection c, String category, String SQL) {
         return runSQL( c, category, SQL, false);
     }
 
