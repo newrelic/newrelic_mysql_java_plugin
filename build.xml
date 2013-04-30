@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="newrelic_mysql_extension" default="jar" basedir=".">
+    <property name="srcdir" value="src/"/>
+    <property name="builddir" value="bin"/>
+    <property name="jarfile" value="newrelic_mysql_plugin.jar"/>
+    <path id="classpath">
+        <pathelement location="lib/newrelic_javaSDK.jar"/>
+        <pathelement location="lib/mysql-connector-java-5.1.24-bin.jar"/>
+    </path>
+    
+    <target name="init" depends="clean">
+        <echo>Creating directory: ${builddir}</echo>
+        <mkdir dir="${builddir}"/>
+    </target>
+    
+    <target name="compile" depends="init">
+        <!--  Compile the java code  -->
+        <echo>Building project...</echo>
+        <javac srcdir="${srcdir}" destdir="${builddir}">
+            <classpath refid="classpath"/>
+        </javac>
+        <echo>Done.</echo>
+    </target>
+
+    <target name="clean">
+        <echo>Cleaning project...</echo>
+        <delete dir="${builddir}"/>
+        <delete file="${jarfile}"/>
+        <echo>Done.</echo>
+    </target>
+    
+    <target name="jar" depends="compile" description="create a Jar file for the application">
+        <jar destfile="${jarfile}">
+            <fileset dir="${builddir}"/>
+            <manifest>
+                <attribute name="Main-Class" value="com.newrelic.plugins.mysql.instance.Main"/>
+                <attribute name="Class-Path" value="lib/json-simple-1.1.1.jar:lib/mysql-connector-java-5.1.24-bin.jar:lib/newrelic_javaSDK.jar"/>
+            </manifest>
+       </jar>
+    </target>
+</project>

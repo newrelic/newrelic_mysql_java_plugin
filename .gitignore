@@ -1,1 +1,4 @@
+.classpath
+newrelic_mysql_plugin.jar
 bin/
+META-INF/
