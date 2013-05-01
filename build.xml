@@ -34,7 +34,7 @@
             <fileset dir="${builddir}"/>
             <manifest>
                 <attribute name="Main-Class" value="com.newrelic.plugins.mysql.instance.Main"/>
-                <attribute name="Class-Path" value="lib/json-simple-1.1.1.jar:lib/mysql-connector-java-5.1.24-bin.jar:lib/newrelic_javaSDK.jar"/>
+                <attribute name="Class-Path" value="lib/json-simple-1.1.1.jar:lib/mysql-connector-java-5.1.24-bin.jar:lib/newrelic_javaSDK.jar:newrelic_mysql_plugin.jar:."/>
             </manifest>
        </jar>
     </target>

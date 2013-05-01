@@ -2,15 +2,13 @@ package com.newrelic.plugins.mysql.instance;
 
 import java.sql.Connection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
+
 
 import com.newrelic.data.in.Agent;
 import com.newrelic.data.in.binding.Context;
-import com.newrelic.data.in.processors.EpochCounter;
 import com.newrelic.plugins.mysql.MetricMeta;
 import com.newrelic.plugins.mysql.MySQL;
 
@@ -23,36 +21,53 @@ import com.newrelic.plugins.mysql.MySQL;
  *
  */
 public class MySQLAgent extends Agent {
-	final static String GUID = "com.newrelic.plugins.mysql.instance";
-	final static String version = "0.1.0";
-	
+	private static final String GUID = "com.newrelic.plugins.mysql.instance";
+	private static final String version = "0.1.0";
+	private static final String COMMA = ",";
+	final
 	Logger logger;														// Local convenience variable
 	private String name;
 	private String host;
 	private String user;
 	private String passwd;
+	private String properties;
 	private String metrics;
  	private Map<String, MetricMeta> metricsMeta = 						// Definition of MySQL meta data (counter, unit, type etc)
  			new HashMap<String, MetricMeta>();							
 
-	public MySQLAgent(String name, String host, String user, String passwd, String metrics) {
+ 	private Map<String, Object> metricCategories = 
+ 			new HashMap<String, Object>();
+ 	/**
+ 	 * Default constructor to create a new MySQL Agent
+ 	 * @param map 
+ 	 * 
+ 	 * @param String Human name for Agent
+ 	 * @param String MySQL Instance host:port
+ 	 * @param String MySQL user
+ 	 * @param String MySQL user password
+ 	 * @param String CSV List of metrics to be monitored
+ 	 */
+ 	public MySQLAgent(String name, String host, String user, String passwd, String properties, String metrics, Map<String, Object> metricCategories) {
 	   	super(GUID, version);
 	   	this.name = name;
 	   	this.host = host;
 	   	this.user = user;
 	   	this.passwd = passwd;
+	   	this.properties = properties;
 	   	this.metrics = metrics.toLowerCase();
+	   	this.metricCategories = metricCategories;
 	   	
 	   	logger = Context.getLogger();									// Set logging to current Context
-	   	MySQL.setLogger(logger);										// Push logger to MySQL context
+	   	MySQL.setLogger(logger);										// Push logger to MySQL Object
 	   	createMetaData();												// Define incremental counters that are value/sec etc
 	}
 	
 	/**
-	 * 
+	 *  This method is run for every poll cycle of the Agent.
+	 *  Get a MySQL Database connection and gather metrics. 
 	 */
 	public void pollCycle() {
-		Connection c = MySQL.getConnection(host, user, passwd);			// Get a database connection (which should be cached)
+		Connection c = MySQL.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
 		if (c == null) return;											// Unable to continue without a valid database connection
 	 	
 		Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics 
@@ -60,64 +75,63 @@ public class MySQLAgent extends Agent {
 	}
 
 	/**
+	 * This method runs the varies categories of MySQL statements
+	 * and gathers the metrics that can be reported
 	 * 
-	 * @param c
-	 * @return
+	 * @param Connection c MySQL Database Connection
+	 * @param String List of metrics to be obtained for this agent
+	 * @return Map of metrics and values
 	 */
 	private Map<String, Number> gatherMetrics(Connection c, String metrics) {
 	 	Map<String,Number> results = new HashMap<String,Number>();		// Create an empty set of results
-	 	
-	 	Map<String,String> SQL = new HashMap<String,String>();
-	 	SQL.put("status", "SHOW GLOBAL STATUS LIKE 'com_select%'");
-	 	SQL.put("slave",  "SHOW SLAVE STATUS");
-	 	SQL.put("master", "SHOW MASTER STATUS");
-	 	SQL.put("innodb", "SHOW ENGINE INNODB STATUS");
-	 	SQL.put("mutex",  "SHOW ENGINE INNODB MUTEX");
-	 	
+	 	Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
 
-	 	Iterator<String> iter = SQL.keySet().iterator();			
+	 	Iterator<String> iter = categories.keySet().iterator();	
+	 	metrics = metrics + COMMA;
 	 	while (iter.hasNext()) {
 	 		String category = (String)iter.next();
-	 		if (metrics.contains(category)) 
-	 			results.putAll(MySQL.runSQL(c, category, SQL.get(category)));
+			@SuppressWarnings("unchecked")
+			Map<String, String> attributes = (Map<String,String>)categories.get(category);
+	 		if (metrics.contains(category + COMMA)) 
+	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), "row".equals(attributes.get("result"))));
 	 	}
 //	 	results.putAll(newRelicMetrics(results));
  		return results;
 	}
 
-	private Map<String, String> newRelicMetrics(Map<String, String> existing) {
-    	Map<String, String> results = new HashMap<String,String>();
+	private Map<String, Number> newRelicMetrics(Map<String, Number> existing) {
+    	Map<String, Number> derived = new HashMap<String,Number>();
 
-		results.put("newrelic/reads", String.valueOf((int)Integer.parseInt(existing.get("com_select")) + (int)Integer.parseInt(existing.get("qcache_hits"))));
-		results.put("newrelic/writes", String.valueOf( (int)Integer.parseInt(existing.get("com_insert")) + 
-				                                       (int)Integer.parseInt(existing.get("com_update")) + 
-				                                       (int)Integer.parseInt(existing.get("com_delete"))));
-		return results;
+    	derived.put("newrelic/reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
+    	derived.put("newrelic/writes", existing.get("status/com_insert").intValue() + existing.get("status/com_insert_select").intValue() +
+				                       existing.get("status/com_update").intValue() + existing.get("status/com_update_multi").intValue() +
+				                       existing.get("status/com_delete").intValue() + existing.get("status/com_delete_multi").intValue() +
+				                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
+		return derived;
 	}
 
 	/**
 	 * 
-	 * @param results
+	 * @param Map results 
 	 */
 	public void reportMetrics(Map<String,Number> results) { 
 	 	logger.info("Reporting " + results.size() + " metrics");
 	 	logger.finest(results.toString());
-	 	int i=0;
+
 	 	Iterator<String> iter = results.keySet().iterator();			
 	 	while (iter.hasNext()) {										// Iterate over current metrics	
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.info("Metric " + ++i + " " + key + ":" + val + " " + (md.isCounter() ? "counter" : ""));
-	 		if (java.lang.Float.class.equals(results.get(key).getClass())) {							// We are working with a float value
-	 		//if (MetricMeta.FLOAT_TYPE.equals(md.getType())) {			
- 				reportMetric(key, md.getUnit(), val.floatValue()); 
-	 		} else {													// We are working with an integer value
- 				if (md.isCounter()) {
- //					logger.info("Counter " + md.getUnit() + " " + md.getCounter().process(val).floatValue());
- 					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
- 				} else {
- 					reportMetric(key , md.getUnit(), val.intValue());
+	 		logger.fine("Metric " + " " + key + ":" + val + " " + (md.isCounter() ? "counter" : ""));
+
+	 		if (md.isCounter()) {										// Metric is a counter
+					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
+			} else {													// Metric is a fixed Number
+				if (java.lang.Float.class.equals(results.get(key).getClass())) {	
+					reportMetric(key, md.getUnit(), val.floatValue()); 	// We are working with a float value
+	 			} else {
+ 					reportMetric(key , md.getUnit(), val.intValue());	// We are working with an int
  				}
 	 		}
 	 	}
@@ -127,33 +141,57 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("status/bytes_sent", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("status/com_select", new MetricMeta(true, "ops/sec"));
-	}
-  
-	@Override
-	public String getComponentHumanLabel() {
-		return name;
+		addMetricMeta("status/com_insert", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/com_insert_select", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/com_delete", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/com_call_procedure", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("network/bytes_received", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("network/bytes_sent", new MetricMeta(true, "bytes/sec"));
+
+		addMetricMeta("newrelic/reads", new MetricMeta(true, "queries/sec"));
+		addMetricMeta("newrelic/writes", new MetricMeta(true, "queries/sec"));
 	}
 
+	private void addMetricMeta(String key, MetricMeta mm) {
+		metricsMeta.put(key, mm); 		
+	}
+  
 	/**
-	 * This provides a lazy instantiation of a MySQL metric where no meta data was defined
+	 * This provides a lazy instantiation of a MySassertEquals("FRED",MySQL.transformStringMetric("FRED"));
+		assertEquals("1",MySQL.transformStringMetric("ON"));
+		assertEquals("1",MySQL.transformStringMetric("TRUE"));
+		assertEquals("0",MySQL.transformStringMetric("OFF"));
+		assertEquals("0",MySQL.transformStringMetric("NONE"));
+		assertEquals("-1",MySQL.transformStringMetric("NULL"));
+		assertEquals("FALSE",MySQL.transformStringMetric("FALSE"));QL metric where no meta data was defined
 	 * and means new metrics can be captured automatically.
 	 * 
 	 * A default metric is a integer value
 	 * 
-	 * @param key
-	 * @return
+	 * @param String Metric to look up
+	 * @return MetridMeta  Structure of information about the metric
 	 */
 	private MetricMeta getMetricMeta(String key) {
- 		MetricMeta md = (MetricMeta)metricsMeta.get(key);
- 		if (md == null) {
+ 		MetricMeta md = (MetricMeta)metricsMeta.get(key);				// Look for existing meta data on metric
+ 		if (md == null) {												// If not found
 			logger.info("Adding default metric for " + key);
-			addMetricMeta(key, MetricMeta.defaultMetricMeta());
+			addMetricMeta(key, MetricMeta.defaultMetricMeta());			// create a default representation
  	 		md = (MetricMeta)metricsMeta.get(key);
  		}
  		return md;
 	}
 
-	private void addMetricMeta(String key, MetricMeta mm) {
-		metricsMeta.put(key, mm); 		
+	/**
+	 * Return the human readable name for this agent.
+	 * 
+	 * @return String
+	 */
+	@Override
+	public String getComponentHumanLabel() {
+		return name;
+	}
+
+	public Map<String, Object> getMetricCategories() {
+		return metricCategories;
 	}
 }

@@ -36,15 +36,15 @@ public class MetricMeta {
 		public static MetricMeta defaultMetricMeta() {
 			return new MetricMeta(false);
 		}
-		
-		public String getUnit() {
-			return unit;
-		}
-		
+
 		public boolean isCounter() {
 			return (counter == null ? false: true);
 		}
 
+		public String getUnit() {
+			return unit;
+		}
+		
 		public EpochCounter getCounter() {
 			return counter;
 		}

@@ -19,10 +19,11 @@ import java.util.logging.Logger;
  */
 public class MySQL {
 
-	public final static String AGENT_DEFAULT_HOST = "localhost";
-	public final static String AGENT_DEFAULT_USER = "newrelic";
-	public final static String AGENT_DEFAULT_PASSWD = "sakila";
-	public static final String AGENT_DEFAULT_METRICS = "status";
+	public static final String AGENT_DEFAULT_HOST = "localhost";
+	public static final String AGENT_DEFAULT_USER = "newrelic";
+	public static final String AGENT_DEFAULT_PASSWD = "sakila";
+	public static final String AGENT_DEFAULT_PROPERTIES = "";
+	public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
 	private static final String SEPARATOR = "/";
 
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
@@ -35,10 +36,10 @@ public class MySQL {
      * @param user  String Database username
      * @param passwd String database password
      */
-	 private static void getNewConnection(String host, String user, String passwd) {
-		String dbURL="jdbc:mysql://" + host;
-		
-		logger.info("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd);
+	 private static void getNewConnection(String host, String user, String passwd, String properties) {
+		String dbURL="jdbc:mysql://" + host + "/" + properties;
+			 
+		logger.info("Getting new MySQL Connection " + dbURL + " " + user);
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
     		conn = DriverManager.getConnection(dbURL, user, passwd);
@@ -55,9 +56,9 @@ public class MySQL {
      * @param passwd String database password
 	 * @return  A MySQL Database connection for use
 	 */
-	public static Connection getConnection(String host, String user, String passwd) {
+	public static Connection getConnection(String host, String user, String passwd, String properties) {
 		if (conn == null) {
-			getNewConnection(host, user, passwd);
+			getNewConnection(host, user, passwd, properties);
 		}
 		
 		// TODO: Test Connection, and reconnect if necessary
@@ -95,7 +96,8 @@ public class MySQL {
     	Statement stmt = null;
     	ResultSet rs = null;
     	Map<String, Number> results = new HashMap<String,Number>();
-	    try {
+
+    	try {
 	    	logger.info("Running " + SQL);
 			stmt = c.createStatement();
             rs = stmt.executeQuery(SQL);								// Execute the given SQL statement
@@ -123,11 +125,13 @@ public class MySQL {
 			logger.severe("An SQL error occured running '" + SQL + "' " + e.getMessage());
 		} finally {
 			try {
-				if (stmt != null) stmt.close();							// Release objects
-				if (rs != null) rs.close();
+				if (rs != null) rs.close();								// Release objects
+				if (stmt != null) stmt.close();	
 			} catch (SQLException e) {
 				;
 			}
+			rs = null;
+			stmt = null;
         }
     	return results;
     }
@@ -147,7 +151,7 @@ public class MySQL {
      * Perform some preliminary transformation of string values that can be 
      * represented in integer values for monitoring
      * 
-     * @param val String value to evaluate
+     * @param val String value to evaluatfinale
      * @return String value that best represents and integer 
      */
      static String transformStringMetric(String val) {

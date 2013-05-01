@@ -1,0 +1,8 @@
+[ 
+  { "category" : "status", "SQL" : "SHOW GLOBAL STATUS" },
+  { "category" : "slave",  "SQL" : "SHOW SLAVE STATUS",  "result" : "row" },
+  { "category" : "master", "SQL" : "SHOW MASTER STATUS", "result" : "row" }
+  { "category" : "buffer_pool_stats", "SQL" : "SELECT * FROM information_schema.innodb_buffer_pool_stats", "result" : "row", "comment" : "MySQL 5.5 or later" },
+  { "category" : "innodb_metrics", "SQL" : "SELECT name, count FROM information_schema.innodb_metrics", "comment" : "MySQL 5.6 or later" },
+  { "category" : "network", "SQL" : "SHOW GLOBAL STATUS LIKE 'bytes%'", "result" : "set" },
+]

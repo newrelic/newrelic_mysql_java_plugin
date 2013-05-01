@@ -24,7 +24,7 @@ public class TestMySQL {
     
  	@Test
 	public void verifyValidConnection() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD);
+		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 	}
 
@@ -70,38 +70,38 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusValid() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD);
+		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, String> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'");
 		assertEquals(1,results.size());	
-		assertEquals("0",results.get("status/com_xa_rollback"));		// A status likely to never have a value
+		assertEquals(0,results.get("status/com_xa_rollback"));		// A status likely to never have a value
 	}
 
 	@Test
 	public void runSQLSingleStatusValue() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD);
+		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, String> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'");
 		assertEquals(1,results.size());	
-		assertTrue(Integer.parseInt(results.get("status/uptime")) > 0);		// A status that will always be > 0
+		assertTrue(results.get("status/uptime").intValue() > 0);		// A status that will always be > 0
 	}
 
 	@Test
 	public void runSQLSingleStatusInvalid() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD);
+		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, String> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'");
 		assertEquals(0,results.size());									// This is removed because value is a string
 	}
 	
 
 	@Test
 	public void runSQLSingleStatusTranslated() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD);
+		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, String> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'");
 		assertEquals(1,results.size());	
-		assertEquals("0",results.get("status/compression"));		//Translated from OFF
+		assertEquals(0,results.get("status/compression"));		//Translated from OFF
 	}
 
    public void closeConnection(Connection c) {
@@ -110,6 +110,28 @@ public class TestMySQL {
 		} catch (SQLException e) {
 		}
     }
+
+   @Test
+   public void runTranslateStringToNumber() {
+	   assertEquals(5,MySQL.translateStringToNumber("5")); 
+	   assertEquals(java.lang.Integer.class, MySQL.translateStringToNumber("5").getClass());
+	   assertEquals(5.0f,MySQL.translateStringToNumber("5.0"));
+	   assertEquals(java.lang.Float.class, MySQL.translateStringToNumber("5.0").getClass());
+   }
+   
+	@Test
+	public void verifyFloat() {
+		String val="0.00";
+		assertTrue(val.matches("\\d*\\.\\d*"));
+	}
+
+	@Test
+	public void verifyNotFloat() {
+		String val="70797";
+		assertFalse(val.matches("\\d*\\.\\d*"));
+	}
+
+
 
 }
 
