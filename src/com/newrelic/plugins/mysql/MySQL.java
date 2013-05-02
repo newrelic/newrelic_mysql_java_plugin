@@ -25,19 +25,22 @@ public class MySQL {
 	public static final String AGENT_DEFAULT_PASSWD = "sakila";
 	public static final String AGENT_DEFAULT_PROPERTIES = "";
 	public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
-	private static final String SEPARATOR = "/";
+	public static final String SEPARATOR = "/";
 
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
-	private static Connection conn = null;								// Database Connection
+	private  Connection conn = null;									// Database Connection
 
-    /**
+	public MySQL() {
+	}
+
+	/**
      * Get a new MySQL database connection  
       *  
      * @param host  String Hostname for MySQL Connection
      * @param user  String Database username for MySQL Connection
      * @param passwd String database password for MySQL Connection
      */
-	 private static void getNewConnection(String host, String user, String passwd, String properties) {
+	 private void getNewConnection(String host, String user, String passwd, String properties) {
 		String dbURL="jdbc:mysql://" + host + "/" + properties;
 			 
 		logger.info("Getting new MySQL Connection " + dbURL + " " + user);
@@ -57,7 +60,7 @@ public class MySQL {
      * @param passwd String database password
 	 * @return  A MySQL Database connection for use
 	 */
-	public static Connection getConnection(String host, String user, String passwd, String properties) {
+	public Connection getConnection(String host, String user, String passwd, String properties) {
 		if (conn == null) {
 			getNewConnection(host, user, passwd, properties);
 		}
