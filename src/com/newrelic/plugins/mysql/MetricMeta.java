@@ -14,8 +14,8 @@ import com.newrelic.data.in.processors.EpochCounter;
  */
 public class MetricMeta {
 
-		private final static String DEFAULT_UNIT ="value";
-		private final static String DEFAULT_COUNTER_UNIT = DEFAULT_UNIT + "/sec";
+		public final static String DEFAULT_UNIT ="value";
+		public final static String DEFAULT_COUNTER_UNIT = DEFAULT_UNIT + "/sec";
 
 		public final static String INTEGER_TYPE = "int";
 		public final static String FLOAT_TYPE = "float";
@@ -26,31 +26,32 @@ public class MetricMeta {
 		
 		public MetricMeta(boolean isCounter, String unit) {
 			this.unit = unit;
-			if (isCounter) counter = new EpochCounter();
+			if (isCounter) this.counter = new EpochCounter();
 		}
 
 		public MetricMeta(boolean isCounter) {
-			new MetricMeta(isCounter, isCounter ? DEFAULT_COUNTER_UNIT: DEFAULT_UNIT);
+			this.unit = isCounter ? DEFAULT_COUNTER_UNIT: DEFAULT_UNIT;
+			if (isCounter) this.counter = new EpochCounter();
 		}
 		
 		public static MetricMeta defaultMetricMeta() {
-			return new MetricMeta(false);
+			return new MetricMeta(true);
 		}
 
 		public boolean isCounter() {
-			return (counter == null ? false: true);
+			return (this.counter == null ? false: true);
 		}
 
 		public String getUnit() {
-			return unit;
+			return this.unit;
 		}
 		
 		public EpochCounter getCounter() {
-			return counter;
+			return this.counter;
 		}
 		
 		public String getType() {
-			return type;
+			return this.type;
 		}
 
 }

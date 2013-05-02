@@ -1,7 +1,7 @@
 [ 
-  { "category" : "status", "SQL" : "SHOW GLOBAL STATUS" },
-  { "category" : "slave",  "SQL" : "SHOW SLAVE STATUS",  "result" : "row" },
-  { "category" : "master", "SQL" : "SHOW MASTER STATUS", "result" : "row" }
+  { "category" : "status", "SQL" : "SHOW GLOBAL STATUS", "value_metrics":"Compression,Innodb_buffer_pool_pages_data,Innodb_buffer_pool_pages_free,Innodb_buffer_pool_pages_misc,Innodb_buffer_pool_pages_total,Innodb_page_size,Last_query_cost,Max_used_connections,Open_files,Open_streams,Open_table_definitions,Open_tables,Qcache_free_blocks,Qcache_free_memory,Qcache_queries_in_cache,Qcache_total_blocks,Rpl_status,Slave_heartbeat_period,Slave_running,Ssl_cipher,Ssl_cipher_list,Ssl_session_cache_mode,Ssl_session_cache_size,Ssl_version,Threads_cached,Threads_connected,Threads_created,Threads_running,Uptime,Uptime_since_flush_status"},
+  { "category" : "slave",  "SQL" : "SHOW SLAVE STATUS",  "result" : "row", "value_metrics" : "Master_Port,Connect_Retry,Read_Master_Log_Pos,Relay_Log_Pos,Las_Errno,Skip_Counter,Exec_Master_Log_Pos,Relay_Log_Space,Until_Log_Pos,Seconds_Behind_Master,Last_IO_Errno,Last_SQL_Errno,Master_Server_Id,SQL_Delay,Master_Retry_Count,Auto_position" },
+  { "category" : "master", "SQL" : "SHOW MASTER STATUS", "result" : "row", "value_metrics" : "Position" }
   { "category" : "buffer_pool_stats", "SQL" : "SELECT * FROM information_schema.innodb_buffer_pool_stats", "result" : "row", "comment" : "MySQL 5.5 or later" },
   { "category" : "innodb_metrics", "SQL" : "SELECT name, count FROM information_schema.innodb_metrics", "comment" : "MySQL 5.6 or later" },
   { "category" : "network", "SQL" : "SHOW GLOBAL STATUS LIKE 'bytes%'", "result" : "set" },

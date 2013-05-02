@@ -1,9 +1,12 @@
 package com.newrelic.plugins.mysql.instance;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 
@@ -22,11 +25,11 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.2.0";
-	private static final String COMMA = ",";
+	private static final String version = "0.2.";
+	public static final String COMMA = ",";
 	
-	final Logger logger;												// Local convenience variable
 	private String name;												// Agent Name
+
 	private String host;												// MySQL Connection parameters
 	private String user;
 	private String passwd;
@@ -35,9 +38,13 @@ public class MySQLAgent extends Agent {
 	private String metrics;												// Metrics to be collected for this agent
  	private Map<String, MetricMeta> metricsMeta = 						// Definition of MySQL meta data (counter, unit, type etc)
  			new HashMap<String, MetricMeta>();							
-
  	private Map<String, Object> metricCategories = 						// Definition of categories of metrics
  			new HashMap<String, Object>();
+
+ 	private MySQL m;													// Per agent MySQL Object
+
+	final Logger logger;												// Local convenience variable
+
  	/**
  	 * Default constructor to create a new MySQL Agent
  	 * @param map 
@@ -46,10 +53,11 @@ public class MySQLAgent extends Agent {
  	 * @param String MySQL Instance host:port
  	 * @param String MySQL user
  	 * @param String MySQL user password
- 	 * @param String CSV List of metrics to be monitored
+ 	 * @param String CSVm List of metrics to be monitored
  	 */
  	public MySQLAgent(String name, String host, String user, String passwd, String properties, String metrics, Map<String, Object> metricCategories) {
 	   	super(GUID, version);
+
 	   	this.name = name;
 	   	this.host = host;
 	   	this.user = user;
@@ -57,6 +65,8 @@ public class MySQLAgent extends Agent {
 	   	this.properties = properties;
 	   	this.metrics = metrics.toLowerCase();
 	   	this.metricCategories = metricCategories;
+
+	   	this.m = new MySQL();
 	   	
 	   	logger = Context.getLogger();									// Set logging to current Context
 	   	MySQL.setLogger(logger);										// Push logger to MySQL Object
@@ -68,7 +78,7 @@ public class MySQLAgent extends Agent {
 	 *  Get a MySQL Database connection and gather metrics. 
 	 */
 	public void pollCycle() {
-		Connection c = MySQL.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
+		Connection c = m.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
 		if (c == null) return;											// Unable to continue without a valid database connection
 	 	
 		Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics 
@@ -124,7 +134,7 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.fine("Metric " + " " + key + ":" + val + " " + (md.isCounter() ? "counter" : ""));
+	 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
 
 	 		if (md.isCounter()) {										// Metric is a counter
 					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
@@ -139,6 +149,22 @@ public class MySQLAgent extends Agent {
 	}
 
 	private void createMetaData() {
+	 	Map<String,Object> categories = getMetricCategories(); 			// GetcreateMetaData current Metric Categories
+	 	Iterator<String> iter = categories.keySet().iterator();	
+	 	while (iter.hasNext()) {
+	 		String category = (String)iter.next();
+			@SuppressWarnings("unchecked")
+			Map<String, String> attributes = (Map<String,String>)categories.get(category);
+			String valueMetrics = attributes.get("value_metrics");
+			if (valueMetrics != null) {
+				Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().split(MySQLAgent.COMMA)));
+				for (String s: metrics) {
+					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
+				}
+			}
+	 	}
+
+	 	/* TODO: Parameterize Hardcoded examples */
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("status/bytes_sent", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("status/com_select", new MetricMeta(true, "ops/sec"));
