@@ -25,7 +25,7 @@ public class TestMySQL {
     
  	@Test
 	public void verifyValidConnection() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+ 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 	}
 
@@ -71,7 +71,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusValid() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'");
 		assertEquals(1,results.size());	
@@ -80,7 +80,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusValue() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'");
 		assertEquals(1,results.size());	
@@ -89,7 +89,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusInvalid() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'");
 		assertEquals(0,results.size());									// This is removed because value is a string
@@ -98,7 +98,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusTranslated() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'");
 		assertEquals(1,results.size());	
