@@ -1,5 +1,6 @@
 package com.newrelic.plugins.mysql;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -19,7 +20,7 @@ import java.util.logging.Logger;
  */
 public class MySQL {
 
-	public static final String AGENT_DEFAULT_HOST = "localhost";
+	public static final String AGENT_DEFAULT_HOST = "localhost:3306";
 	public static final String AGENT_DEFAULT_USER = "newrelic";
 	public static final String AGENT_DEFAULT_PASSWD = "sakila";
 	public static final String AGENT_DEFAULT_PROPERTIES = "";
@@ -32,9 +33,9 @@ public class MySQL {
     /**
      * Get a new MySQL database connection  
       *  
-     * @param host  String Hostname
-     * @param user  String Database username
-     * @param passwd String database password
+     * @param host  String Hostname for MySQL Connection
+     * @param user  String Database username for MySQL Connection
+     * @param passwd String database password for MySQL Connection
      */
 	 private static void getNewConnection(String host, String user, String passwd, String properties) {
 		String dbURL="jdbc:mysql://" + host + "/" + properties;
@@ -72,8 +73,6 @@ public class MySQL {
 	 * This method is optimized for queries designed to produce New Relic
 	 * compatible type results
 	 * 
-	 * TODO: A future improvement is to create a String/Number map
-	 * 
 	 * @param c Connection
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs
@@ -84,7 +83,7 @@ public class MySQL {
 			 if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
  				return (float)Float.parseFloat(val);
 			 } else {
- 				return (int)Integer.parseInt(val);
+ 				return new BigInteger(val);
 			 }
 		} catch (Exception e) {
  			logger.warning("Unable to parse int/float number from value " + val);
@@ -151,7 +150,7 @@ public class MySQL {
      * Perform some preliminary transformation of string values that can be 
      * represented in integer values for monitoring
      * 
-     * @param val String value to evaluatfinale
+     * @param val String value to evaluate
      * @return String value that best represents and integer 
      */
      static String transformStringMetric(String val) {

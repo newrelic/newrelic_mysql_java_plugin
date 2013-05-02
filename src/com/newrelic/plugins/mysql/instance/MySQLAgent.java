@@ -22,20 +22,21 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.1.0";
+	private static final String version = "0.2.0";
 	private static final String COMMA = ",";
-	final
-	Logger logger;														// Local convenience variable
-	private String name;
-	private String host;
+	
+	final Logger logger;												// Local convenience variable
+	private String name;												// Agent Name
+	private String host;												// MySQL Connection parameters
 	private String user;
 	private String passwd;
-	private String properties;
-	private String metrics;
+	private String properties;									
+	
+	private String metrics;												// Metrics to be collected for this agent
  	private Map<String, MetricMeta> metricsMeta = 						// Definition of MySQL meta data (counter, unit, type etc)
  			new HashMap<String, MetricMeta>();							
 
- 	private Map<String, Object> metricCategories = 
+ 	private Map<String, Object> metricCategories = 						// Definition of categories of metrics
  			new HashMap<String, Object>();
  	/**
  	 * Default constructor to create a new MySQL Agent
@@ -95,11 +96,11 @@ public class MySQLAgent extends Agent {
 	 		if (metrics.contains(category + COMMA)) 
 	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), "row".equals(attributes.get("result"))));
 	 	}
-//	 	results.putAll(newRelicMetrics(results));
+//	 	results.putAll(newRelicMetrics(results, metrics));
  		return results;
 	}
 
-	private Map<String, Number> newRelicMetrics(Map<String, Number> existing) {
+	protected Map<String, Number> newRelicMetrics(Map<String, Number> existing, String metrics) {
     	Map<String, Number> derived = new HashMap<String,Number>();
 
     	derived.put("newrelic/reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
@@ -157,13 +158,7 @@ public class MySQLAgent extends Agent {
 	}
   
 	/**
-	 * This provides a lazy instantiation of a MySassertEquals("FRED",MySQL.transformStringMetric("FRED"));
-		assertEquals("1",MySQL.transformStringMetric("ON"));
-		assertEquals("1",MySQL.transformStringMetric("TRUE"));
-		assertEquals("0",MySQL.transformStringMetric("OFF"));
-		assertEquals("0",MySQL.transformStringMetric("NONE"));
-		assertEquals("-1",MySQL.transformStringMetric("NULL"));
-		assertEquals("FALSE",MySQL.transformStringMetric("FALSE"));QL metric where no meta data was defined
+	 * This provides a lazy instantiation of a MySQL metric where no meta data was defined
 	 * and means new metrics can be captured automatically.
 	 * 
 	 * A default metric is a integer value
