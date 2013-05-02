@@ -2,18 +2,20 @@ package com.newrelic.plugins.mysql.instance;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.newrelic.data.in.Agent;
 import com.newrelic.data.in.AgentFactory;
+import com.newrelic.data.in.binding.Context;
 import com.newrelic.data.in.configuration.ConfigurationException;
 import com.newrelic.plugins.mysql.MySQL;
 
 /**
  * This class produces the necessary Agents to perform
- * the MySQL plugin work
+ * gathering and reporting metrics for the MySQL plugin
  * 
  * @author Ronald Bradford me@ronaldbradford.com
  *
@@ -35,7 +37,7 @@ public class MySQLAgentFactory extends AgentFactory {
 	 * 
 	 */
 	@Override
-	public Agent createConfiguredAgent(Map<String, Object> properties) {
+	public Agent createConfiguredAgent(Map<String, Object> properties) throws ConfigurationException {
 		String name = (String) properties.get("name");
 		String host = (String) properties.get("host");
 		String user = (String) properties.get("user");
@@ -54,12 +56,20 @@ public class MySQLAgentFactory extends AgentFactory {
 		return new MySQLAgent(name,host,user,passwd, conn_properties, metrics, readCategoryConfiguration());
 	}
 	
-	public Map<String,Object> readCategoryConfiguration() {
+	/**
+	 * Read metric category information that enables the dynamic definition 
+	 * of MySQL metrics that can be collected.
+	 * 
+	 * @return Map  Categories and the meta data about the categories
+	 * @throws ConfigurationException
+	 */
+	public Map<String,Object> readCategoryConfiguration() throws ConfigurationException {
 		Map<String, Object> metricCategories = new HashMap<String, Object>();
 
 		JSONArray json;
+		String filename = "metric.category.json";
 		try {
-			json = this.readJSONFile("metric.category.json");
+			json = this.readJSONFile(filename);
 			for (int i = 0; i < json.size(); i++) {
 		    	JSONObject obj = (JSONObject) json.get(i);
 		    	String category = (String)obj.get("category");
@@ -67,10 +77,14 @@ public class MySQLAgentFactory extends AgentFactory {
 			}
 
 		} catch (ConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw logAndThrow(Context.getLogger(), "Error parsing config file " + filename);
 		}
 
 		return metricCategories; 
 	}
+	
+	private ConfigurationException logAndThrow(Logger logger,String message) {
+		logger.severe(message);
+		return new ConfigurationException(message);
+	}  
 }
