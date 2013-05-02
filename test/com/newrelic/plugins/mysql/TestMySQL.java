@@ -1,5 +1,6 @@
 package com.newrelic.plugins.mysql;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class TestMySQL {
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'");
 		assertEquals(1,results.size());	
-		assertEquals(0,results.get("status/com_xa_rollback"));		// A status likely to never have a value
+		assertEquals(0,results.get("status/com_xa_rollback").intValue());		// A status likely to never have a value
 	}
 
 	@Test
@@ -101,7 +102,7 @@ public class TestMySQL {
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'");
 		assertEquals(1,results.size());	
-		assertEquals(0,results.get("status/compression"));		//Translated from OFF
+		assertEquals(0,results.get("status/compression").intValue());		//Translated from OFF
 	}
 
    public void closeConnection(Connection c) {
@@ -113,10 +114,12 @@ public class TestMySQL {
 
    @Test
    public void runTranslateStringToNumber() {
-	   assertEquals(5,MySQL.translateStringToNumber("5")); 
-	   assertEquals(java.lang.Integer.class, MySQL.translateStringToNumber("5").getClass());
+	   assertEquals(5,MySQL.translateStringToNumber("5").intValue()); 
+	   assertEquals(java.math.BigInteger.class, MySQL.translateStringToNumber("5").getClass());
 	   assertEquals(5.0f,MySQL.translateStringToNumber("5.0"));
 	   assertEquals(java.lang.Float.class, MySQL.translateStringToNumber("5.0").getClass());
+	   BigInteger x = new BigInteger("37107795968");
+	   assertEquals(x,MySQL.translateStringToNumber("37107795968"));
    }
    
 	@Test

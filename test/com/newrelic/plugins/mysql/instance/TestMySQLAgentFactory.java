@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.newrelic.data.in.configuration.ConfigurationException;
 import com.newrelic.plugins.mysql.MySQL;
 
 public class TestMySQLAgentFactory {
@@ -18,7 +19,12 @@ public class TestMySQLAgentFactory {
 	public void verifyMetricCategoryConfiguration() {
 
 		MySQLAgentFactory factory = new MySQLAgentFactory();
-		Map<String, Object> categories = factory.readCategoryConfiguration();
+		Map<String, Object> categories = null;
+		try {
+			categories = factory.readCategoryConfiguration();
+		} catch (ConfigurationException e) {
+			fail(e.getMessage());
+		}
 		assertEquals(6, categories.size());
 		Object status = categories.get("status");
 		assertNotNull(status);
