@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.2.";
+	private static final String version = "0.2.2";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
