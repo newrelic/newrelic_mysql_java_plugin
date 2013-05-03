@@ -1,12 +1,30 @@
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+
 MySQL plugin for New Relic
 ==========================
 
-Downloading the MySQL plugin
+Prerequisites
 
-//TODO
+The MySQL plugin for New Relic requires the following to succesfully install
+
+  1. A New Relic account. Signup for a free account at http://newrelic.com
+  2. A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
+  3. The MySQL server or another applicable server with a configured Java Runtime (JRE) environment Verion 1.5 or better.
+
+Downloading the MySQL plugin for New Relic
+
+//TODO TODO TODO
+
+  1. Download the New Relic Java SDK from https://github.com/newrelic-platform/newrelic_javaSDK NOTE: Is this subject to change soon!
+  2. Download the New Relic plugin for MySQL from https://github.com/newrelic-platform/newrelic_mysql_extension
+  3. Download the MySQL Connector/J from http://dev.mysql.com/downloads/connector/j/
 
 
-Configuring your environment
+Configuring your Agent Environment
+
+The New Relic plugin for MySQL runs an Agent process to collect and report MySQL metrics to New Relic. The following steps
+configure this agent for your specific environment.
 
   1.  New Relic Account License Key
   2.  MySQL privileges
@@ -14,6 +32,8 @@ Configuring your environment
   
   
 1. New Relic License
+
+Specific your current licence key in the necessary properties file.
 
  $ cp config/newrelic.properties.example config/newrelic.properties
  # Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
@@ -25,12 +45,16 @@ When deploying a MySQL plugin on each MySQL server, you require the following My
 mysql> CREATE USER newrelic@localhost IDENTIFIED BY PASSWORD '*FDAF706717E70DB8DDAD0C5214B13770E1A80B0E';
 mysql> GRANT PROCESS,REPLICATION CLIENT ON *.* TO newrelic@localhost;
 
+You can choose to use a different MySQL user name and password if you desire. These are defaults to simplify further installation.
+
 When deploying a MySQL Plugin on a common server, the necessary change is to grant privileges to the applicable hostname,
-or host mask, changing the value of localhost in the 2 SQL statements appropriately.
+or host mask, i.e. changing the value of "localhost" in the 2 SQL statements appropriately, e.g. to "10.%" if your servers 
+run with this IP range.
 
 
 3. MySQL Properties
 
+Each running MySQL plugin agent requires a JSON configuration file defining the access to the MySQL instance(s).
 
  $ cp config/mysql.instance.json.sample config/mysql.instance.json
  # Edit config/mysql.instance.json
@@ -45,12 +69,12 @@ previous step, you only need to give your MySQL instance a meaningful name.  All
  ]
 
 
-You can override all necessary MySQL details with the following syntax.
+You can override all necessary MySQL details. The following is an example syntax.
 
  [
     {
         "name"       : "Server/Instance Name",
-        "host"       : "localhost",
+        "host"       : "localhost:3306",
         "user"       : "newrelic",
         "passwd"     : "Your Password Here",
         "properties" : "?profileSQL=true",
@@ -73,7 +97,7 @@ numeric (a New Relic limitation), the MySQL plugin can record this information
 in New Relic.
 
 The config/metric.category.json file includes the default categories of MySQL metrics
-and provides some additional examples.
+and provides some additional examples for reference.
 
 The obvious commands SHOW GLOBAL STATUS, SHOW MASTER STATUS and SHOW SLAVE STATUS 
 satisfy the previous formatting requirements. Additionally commands that select
@@ -84,3 +108,6 @@ information.
 
 Commands such as SHOW ENGINE INNODB STATUS and SHOW ENGINE INNODB MUTEX are not 
 currently supported because they do not fall into the above two categories.
+
+The "metrics" configuration for each MySQL Instance is a CSV list of metric categories 
+that are collected for each MySQL Instance.
