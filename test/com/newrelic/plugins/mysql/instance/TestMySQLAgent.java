@@ -30,7 +30,7 @@ public class TestMySQLAgent {
 		String metrics="status,newrelic";
 		MySQLAgent agent = new MySQLAgent("test",
 										  MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES,
-										  metrics, null);
+										  metrics, new HashMap<String,Object>());
 		
 		Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results,metrics);
 		assertNotNull(newRelicMetrics);
@@ -38,22 +38,5 @@ public class TestMySQLAgent {
 		assertEquals(3,newRelicMetrics.get("newrelic/reads"));
 		assertEquals(1020,newRelicMetrics.get("newrelic/writes"));
 	}
-
-	@Test
-	public void verifyRealStatusValues() {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
-		assertNotNull(c);
-		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS");
-
-		String metrics="status,newrelic";
-		MySQLAgent agent = new MySQLAgent("test",
-										  MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES,
-										  metrics, null);
-		
-		Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results,metrics);
-		assertNotNull(newRelicMetrics);
-		assertEquals(2,newRelicMetrics.size());
-	}
-	
 
 }
