@@ -2,6 +2,7 @@ package com.newrelic.plugins.mysql.instance;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.json.simple.JSONArray;
@@ -52,7 +53,8 @@ public class MySQLAgentFactory extends AgentFactory {
 		if (passwd == null || "".equals(passwd)) passwd = MySQL.AGENT_DEFAULT_PASSWD;
 		if (conn_properties == null || "".equals(conn_properties)) conn_properties = MySQL.AGENT_DEFAULT_PROPERTIES;
 		if (metrics == null || "".equals(metrics)) metrics = MySQL.AGENT_DEFAULT_METRICS;
-       
+     
+		Context.getLogger().setLevel(Level.ALL);
 		return new MySQLAgent(name,host,user,passwd, conn_properties, metrics, readCategoryConfiguration());
 	}
 	

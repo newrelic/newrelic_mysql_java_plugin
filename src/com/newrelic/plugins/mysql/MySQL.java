@@ -111,6 +111,13 @@ public class MySQL {
             			if (validMetricValue(rs.getString(i)))
             				results.put(category + SEPARATOR + md.getColumnName(i).toLowerCase(),
             							translateStringToNumber(transformStringMetric(rs.getString(i))));
+            			// rs.getString converts the string NULL into null
+            			if ("seconds_behind_master".equals(md.getColumnName(i).toLowerCase())) {
+            				if (rs.getString(i) == null) {
+            				results.put(category + SEPARATOR + md.getColumnName(i).toLowerCase(),
+        							translateStringToNumber(transformStringMetric("NULL")));
+            				}
+            			}
             		}
             	}
             } else {										            // This SQL statement return a key/value pair set of rows

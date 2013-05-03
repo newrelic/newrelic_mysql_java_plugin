@@ -106,18 +106,34 @@ public class MySQLAgent extends Agent {
 	 		if (metrics.contains(category + COMMA)) 
 	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), "row".equals(attributes.get("result"))));
 	 	}
-//	 	results.putAll(newRelicMetrics(results, metrics));
+	 	results.putAll(newRelicMetrics(results, metrics));
  		return results;
 	}
 
+	/**
+	 * This method creates a number of custom New Relic Metrics, that are derived from
+	 * raw MySQL status metrics
+	 * 
+	 * @param Map existing Gathered MySQL metrics
+	 * @param metrics  String of the Metric Categories to capture
+	 * @return Map  Additional derived metrics
+	 */
 	protected Map<String, Number> newRelicMetrics(Map<String, Number> existing, String metrics) {
     	Map<String, Number> derived = new HashMap<String,Number>();
+
+ 		if (!metrics.contains("newrelic" + COMMA)) return derived;		// Only calculate newrelic category if specified.
+ 		if (!metrics.contains("status" + COMMA)) return derived;		// "status" category is a pre-requisite
+
+	 	logger.info("Adding NewRelic derived metrics");
 
     	derived.put("newrelic/reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
     	derived.put("newrelic/writes", existing.get("status/com_insert").intValue() + existing.get("status/com_insert_select").intValue() +
 				                       existing.get("status/com_update").intValue() + existing.get("status/com_update_multi").intValue() +
 				                       existing.get("status/com_delete").intValue() + existing.get("status/com_delete_multi").intValue() +
 				                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
+    	derived.put("newrelic/innodb_buffer_pool_hit_ratio", (existing.get("status/innodb_buffer_pool_read_requests").intValue() / 
+    			                                             (existing.get("status/innodb_buffer_pool_read_requests").intValue() + existing.get("status/innodb_buffer_pool_reads").intValue()) * 100.0)).floatValue();
+    			
 		return derived;
 	}
 
@@ -134,7 +150,7 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
+	 		logger.info("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
 
 	 		if (md.isCounter()) {										// Metric is a counter
 					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
@@ -177,6 +193,7 @@ public class MySQLAgent extends Agent {
 
 		addMetricMeta("newrelic/reads", new MetricMeta(true, "queries/sec"));
 		addMetricMeta("newrelic/writes", new MetricMeta(true, "queries/sec"));
+		addMetricMeta("newrelic/innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
 	}
 
 	private void addMetricMeta(String key, MetricMeta mm) {
