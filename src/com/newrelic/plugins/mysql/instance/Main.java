@@ -1,7 +1,7 @@
 package com.newrelic.plugins.mysql.instance;
 
-import com.newrelic.data.in.Runner;
-import com.newrelic.data.in.configuration.ConfigurationException;
+import com.newrelic.metrics.publish.Runner;
+import com.newrelic.metrics.publish.configuration.ConfigurationException;
 
 
 public class Main {	

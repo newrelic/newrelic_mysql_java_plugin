@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 
-import com.newrelic.data.in.Agent;
-import com.newrelic.data.in.binding.Context;
+import com.newrelic.metrics.publish.Agent;
+import com.newrelic.metrics.publish.binding.Context;
 import com.newrelic.plugins.mysql.MetricMeta;
 import com.newrelic.plugins.mysql.MySQL;
 
