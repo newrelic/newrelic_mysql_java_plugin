@@ -1,6 +1,6 @@
 package com.newrelic.plugins.mysql;
 
-import com.newrelic.data.in.processors.EpochCounter;
+import com.newrelic.metrics.publish.processors.EpochCounter;;
 
 /**
  * This class holds additional meta data about a given metric

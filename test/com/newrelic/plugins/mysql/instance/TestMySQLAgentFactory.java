@@ -13,7 +13,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.newrelic.data.in.configuration.ConfigurationException;
+import com.newrelic.metrics.publish.configuration.ConfigurationException;
 import com.newrelic.plugins.mysql.MetricMeta;
 import com.newrelic.plugins.mysql.MySQL;
 
