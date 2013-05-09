@@ -8,10 +8,10 @@ import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.newrelic.data.in.Agent;
-import com.newrelic.data.in.AgentFactory;
-import com.newrelic.data.in.binding.Context;
-import com.newrelic.data.in.configuration.ConfigurationException;
+import com.newrelic.metrics.publish.Agent;
+import com.newrelic.metrics.publish.AgentFactory;
+import com.newrelic.metrics.publish.binding.Context;
+import com.newrelic.metrics.publish.configuration.ConfigurationException;
 import com.newrelic.plugins.mysql.MySQL;
 
 /**
