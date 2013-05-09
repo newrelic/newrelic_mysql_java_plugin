@@ -50,7 +50,7 @@ public class MySQLAgentFactory extends AgentFactory {
 		 */
 		if (host == null || "".equals(host)) host = MySQL.AGENT_DEFAULT_HOST;
 		if (user == null || "".equals(user)) user = MySQL.AGENT_DEFAULT_USER;
-		if (passwd == null || "".equals(passwd)) passwd = MySQL.AGENT_DEFAULT_PASSWD;
+		if (passwd == null) passwd = MySQL.AGENT_DEFAULT_PASSWD;
 		if (conn_properties == null || "".equals(conn_properties)) conn_properties = MySQL.AGENT_DEFAULT_PROPERTIES;
 		if (metrics == null || "".equals(metrics)) metrics = MySQL.AGENT_DEFAULT_METRICS;
      
