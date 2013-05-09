@@ -165,7 +165,9 @@ public class MySQL {
      */
      static String transformStringMetric(String val) {
       	if ("ON".equals(val) || "TRUE".equals(val)) return "1";			// Convert some TEXT metrics into numerics
-     	if ("OFF".equals(val) || "NONE".equals(val)) return "0";
+    	if ("OFF".equals(val) || "NONE".equals(val)) return "0";
+    	if ("YES".equals(val)) return "1";								// For slave/slave_*_running
+    	if ("NO".equals(val)) return "0";								// For slave/slave_*_running
      	if ("NULL".equals(val)) return "-1";							// For slave/seconds_behind_master
      	return val;
      }

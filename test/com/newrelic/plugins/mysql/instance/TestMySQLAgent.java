@@ -38,5 +38,20 @@ public class TestMySQLAgent {
 		assertEquals(3,newRelicMetrics.get("newrelic/reads"));
 		assertEquals(1020,newRelicMetrics.get("newrelic/writes"));
 	}
+	
+	@Test
+	public void testExpresssions() {
+		Map<String, Number> existing = new HashMap<String, Number>();
 
+		existing.put("status/threads_running", 4);
+		existing.put("status/threads_connected", 10);
+
+		assertEquals (50.0, (5.0/10.0)*100.0, 0.0001);
+	 	float threads_running = existing.get("status/threads_running").floatValue();
+		float threads_connected = existing.get("status/threads_connected").floatValue();
+		assertEquals(4.0, threads_running, 0.0001);
+		assertEquals(10.0, threads_connected, 0.0001);
+	 	assertEquals(40.0, (threads_running / threads_connected) * 100.0 , 0.0001);
+	 	assertEquals(4, (int)threads_running);
+	}
 }

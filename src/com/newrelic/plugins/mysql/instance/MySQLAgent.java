@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.2.2";
+	private static final String version = "0.3.0";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -126,18 +126,53 @@ public class MySQLAgent extends Agent {
 
 	 	logger.info("Adding NewRelic derived metrics");
 
-    	derived.put("newrelic/reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
-    	derived.put("newrelic/writes", existing.get("status/com_insert").intValue() + existing.get("status/com_insert_select").intValue() +
-				                       existing.get("status/com_update").intValue() + existing.get("status/com_update_multi").intValue() +
-				                       existing.get("status/com_delete").intValue() + existing.get("status/com_delete_multi").intValue() +
-				                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
-    	derived.put("newrelic/innodb_buffer_pool_hit_ratio", (existing.get("status/innodb_buffer_pool_read_requests").intValue() / 
-    			                                             (existing.get("status/innodb_buffer_pool_read_requests").intValue() + existing.get("status/innodb_buffer_pool_reads").intValue()) * 100.0)).floatValue();
-    			
-		return derived;
+	 	try {															// Catch any number conversion problems
+		 	/* read and write volume */
+		 	derived.put("newrelic/volume_reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
+	    	derived.put("newrelic/volume_writes", existing.get("status/com_insert").intValue() + existing.get("status/com_insert_select").intValue() +
+					                       existing.get("status/com_update").intValue() + existing.get("status/com_update_multi").intValue() +
+					                       existing.get("status/com_delete").intValue() + existing.get("status/com_delete_multi").intValue() +
+					                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
+	
+	    	/* read and write throughput */
+		 	derived.put("newrelic/bytes_reads", existing.get("status/bytes_sent").intValue());
+		 	derived.put("newrelic/bytes_writes", existing.get("status/bytes_received").intValue());
+	
+	    	/* Connection management */
+		 	float threads_connected = existing.get("status/threads_running").floatValue();
+		 	float threads_running = existing.get("status/threads_running").floatValue();
+		 	derived.put("newrelic/connections_connected", (int)threads_connected);
+		 	derived.put("newrelic/connections_running", (int)threads_running);
+		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
+	
+		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
+	
+		 	/* Replication specifics */
+	 		if (metrics.contains("slave" + COMMA)) {					// "slave" category is a pre-requisite for these metrics
+			 	derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
+			 	int slave_io_thread_running = existing.get("slave/slave_io_thread").intValue();
+			 	int slave_sql_thread_running = existing.get("slave/slave_sql_thread").intValue();
+			 	
+			 	/* both need to be YES, which is 1 */
+			 	int replication_status = 1;								// Default as in ERROR
+			 	if (slave_io_thread_running + slave_sql_thread_running == 2) 
+			 		replication_status = 0;
+			 	derived.put("newrelic/replication_status", replication_status);
+	 		} 
+		 	/* Innodb Specific Metrics */
+		 	float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
+		 	float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
+	    	derived.put("newrelic/innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
+	    			                                             (innodb_read_requests + innodb_reads)) * 100.0);
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating New Relic custom metrics. " + e.getMessage());	 		
+	 	}
+
+	 	return derived;
 	}
 
 	/**
+	 * This method does the reporting of metrics to New Relic
 	 * 
 	 * @param Map results 
 	 */
@@ -150,7 +185,7 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.info("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
+	 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
 
 	 		if (md.isCounter()) {										// Metric is a counter
 					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
@@ -164,6 +199,10 @@ public class MySQLAgent extends Agent {
 	 	}
 	}
 
+	/**
+	 * This method creates the metric meta data that is derived from the provided configuration
+	 * and New Relic specific metrics.
+	 */
 	private void createMetaData() {
 	 	Map<String,Object> categories = getMetricCategories(); 			// GetcreateMetaData current Metric Categories
 	 	Iterator<String> iter = categories.keySet().iterator();	
@@ -180,22 +219,39 @@ public class MySQLAgent extends Agent {
 			}
 	 	}
 
-	 	/* TODO: Parameterize Hardcoded examples */
+	 	/* Define New Relic specific metrics used for default dashboards */
+		addMetricMeta("newrelic/volume_reads", new MetricMeta(true, "queries/sec"));
+		addMetricMeta("newrelic/volume_writes", new MetricMeta(true, "queries/sec"));
+
+		addMetricMeta("newrelic/bytes_reads", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("newrelic/bytes_writes", new MetricMeta(true, "bytes/sec"));
+
+		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "count"));
+		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "count"));
+		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "count"));
+
+		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "pct"));
+
+		addMetricMeta("newrelic/innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
+
+	 	/* Define improved metric values for certain general metrics */
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("status/bytes_sent", new MetricMeta(true, "bytes/sec"));
-		addMetricMeta("status/com_select", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/com_select", new MetricMeta(true, "selects/sec"));
 		addMetricMeta("status/com_insert", new MetricMeta(true, "ops/sec"));
 		addMetricMeta("status/com_insert_select", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/com_update", new MetricMeta(true, "ops/sec"));
 		addMetricMeta("status/com_delete", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("status/com_call_procedure", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("network/bytes_received", new MetricMeta(true, "bytes/sec"));
-		addMetricMeta("network/bytes_sent", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("status/com_replace", new MetricMeta(true, "ops/sec"));
 
-		addMetricMeta("newrelic/reads", new MetricMeta(true, "queries/sec"));
-		addMetricMeta("newrelic/writes", new MetricMeta(true, "queries/sec"));
-		addMetricMeta("newrelic/innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
 	}
 
+	/**
+	 * Add the given metric meta information to the Map of all metric meta information for this agent
+	 * 
+	 * @param String key
+	 * @param Metric mm
+	 */
 	private void addMetricMeta(String key, MetricMeta mm) {
 		metricsMeta.put(key, mm); 		
 	}
@@ -229,6 +285,11 @@ public class MySQLAgent extends Agent {
 		return name;
 	}
 
+	/**
+	 * Return the map of metric categories
+	 * 
+	 * @return Map
+	 */
 	public Map<String, Object> getMetricCategories() {
 		return metricCategories;
 	}
