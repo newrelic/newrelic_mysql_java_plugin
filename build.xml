@@ -8,10 +8,11 @@
     <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
 
     <property name="platform-metrics-java" value="${libdir}/metrics_publish-beta.jar"/>
+    <property name="mysql-connector" value="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
 
     <path id="classpath">
         <pathelement location="${platform-metrics-java}"/>
-        <pathelement location="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
+        <pathelement location="${mysql-connector}"/>
     </path>
     
     <target name="init" depends="clean">
@@ -49,7 +50,8 @@
                 <attribute name="Main-Class" value="com.newrelic.plugins.mysql.instance.Main"/>
     	    </manifest>
             <fileset dir="${builddir}"/>
-            <zipfileset src="${platform-metrics-java}"/>        
+            <zipfileset src="${platform-metrics-java}"/> 
+            <zipfileset src="${mysql-connector}"/> 
        </jar>
     </target>
 </project>
