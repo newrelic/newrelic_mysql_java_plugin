@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="newrelic_mysql_extension" default="jar" basedir=".">
     <property name="srcdir" value="src/"/>
-    <property name="builddir" value="bin"/>
-    <property name="jarfile" value="newrelic_mysql_plugin.jar"/>
+    <property name="builddir" value="build"/>
+	<property name="libdir" value="lib"/>
+	<property name="distdir" location="dist"/>
+	<property name="version" value="beta"/>
+    <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
+
+    <property name="platform-metrics-java" value="${libdir}/metrics_publish-beta.jar"/>
+
     <path id="classpath">
-        <pathelement location="lib/newrelic_javaSDK.jar"/>
-        <pathelement location="lib/mysql-connector-java-5.1.24-bin.jar"/>
+        <pathelement location="${platform-metrics-java}"/>
+        <pathelement location="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
     </path>
     
     <target name="init" depends="clean">
@@ -28,14 +34,22 @@
         <delete file="${jarfile}"/>
         <echo>Done.</echo>
     </target>
-    
+
+
     <target name="jar" depends="compile" description="create a Jar file for the application">
-        <jar destfile="${jarfile}">
-            <fileset dir="${builddir}"/>
+    	<tstamp/>
+    	<jar destfile="${jarfile}">
             <manifest>
+            	<attribute name="Specification-Title" value="Platform MySQL Plugin"/>
+            	<attribute name="Specification-Vendor" value="New Relic, Inc."/>
+            	<attribute name="Implementation-Vendor" value="New Relic, Inc."/>                
+            	<attribute name="Built-Date" value="${TODAY}"/>
+                <attribute name="Specification-Version" value="${version}"/>   
+            	<attribute name="Implementation-Version" value="${version} ${TODAY}"/> 
                 <attribute name="Main-Class" value="com.newrelic.plugins.mysql.instance.Main"/>
-                <attribute name="Class-Path" value="lib/json-simple-1.1.1.jar:lib/mysql-connector-java-5.1.24-bin.jar:lib/newrelic_javaSDK.jar:newrelic_mysql_plugin.jar:."/>
-            </manifest>
+    	    </manifest>
+            <fileset dir="${builddir}"/>
+            <zipfileset src="${platform-metrics-java}"/>        
        </jar>
     </target>
 </project>

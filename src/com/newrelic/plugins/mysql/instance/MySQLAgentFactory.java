@@ -71,7 +71,7 @@ public class MySQLAgentFactory extends AgentFactory {
 		JSONArray json;
 		String filename = "metric.category.json";
 		try {
-			json = this.readJSONFile(filename);
+			json = readJSONFile(filename);
 			for (int i = 0; i < json.size(); i++) {
 		    	JSONObject obj = (JSONObject) json.get(i);
 		    	String category = (String)obj.get("category");
