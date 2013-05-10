@@ -48,7 +48,7 @@
                 <attribute name="Specification-Version" value="${version}"/>   
             	<attribute name="Implementation-Version" value="${version} ${TODAY}"/> 
                 <attribute name="Main-Class" value="com.newrelic.plugins.mysql.instance.Main"/>
-            	<attribute name="Class-Path" value="mysql-connector-java-5.1.24-bin.jar"/>
+            	<attribute name="Class-Path" value="mysql-connector-java.jar"/>
     	    </manifest>
             <fileset dir="${builddir}"/>
             <zipfileset src="${platform-metrics-java}"/> 
