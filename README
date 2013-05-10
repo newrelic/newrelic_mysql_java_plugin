@@ -3,19 +3,22 @@ MySQL plugin for New Relic
 
 Prerequisites
 
-The MySQL plugin for New Relic requires the following to succesfully install
+The MySQL plugin for New Relic requires the following prerequisites
 
   1. A New Relic account. Signup for a free account at http://newrelic.com
   2. A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
-  3. The MySQL server or another applicable server with a configured Java Runtime (JRE) environment Verion 1.5 or better.
+  3. The MySQL server or another applicable server with a configured Java Runtime (JRE) environment Version 1.5 or better.
 
 Downloading the MySQL plugin for New Relic
 
-//TODO TODO TODO
+  1. Download and unpack the New Relic plugin for MySQL from 
+  2. Download the MySQL Connector/J from http://dev.mysql.com/downloads/connector/j/
 
-  1. Download the New Relic Java SDK from https://github.com/newrelic-platform/newrelic_javaSDK NOTE: Is this subject to change soon!
-  2. Download the New Relic plugin for MySQL from https://github.com/newrelic-platform/newrelic_mysql_extension
-  3. Download the MySQL Connector/J from http://dev.mysql.com/downloads/connector/j/
+
+
+The following instructions automate the process
+
+tar xvfz newrelic_mysql_plugin*.tar.gz
 
 
 Configuring your Agent Environment
@@ -30,7 +33,7 @@ configure this agent for your specific environment.
   
 1. New Relic License
 
-Specific your current licence key in the necessary properties file.
+Specific your current license key in the necessary properties file.
 
  $ cp config/newrelic.properties.example config/newrelic.properties
  # Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
@@ -66,7 +69,7 @@ previous step, you only need to give your MySQL instance a meaningful name.  All
  ]
 
 
-You can override all necessary MySQL details. The following is an example syntax.
+You can ohttps://github.com/newrelic-platform/newrelic_mysql_extensionverride all necessary MySQL details. The following is an example syntax.
 
  [
     {
@@ -108,3 +111,8 @@ currently supported because they do not fall into the above two categories.
 
 The "metrics" configuration for each MySQL Instance is a CSV list of metric categories 
 that are collected for each MySQL Instance.
+
+
+Source Code
+
+This plugin can be found at https://github.com/newrelic-platform/newrelic_mysql_extension

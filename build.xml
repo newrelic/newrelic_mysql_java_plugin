@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="newrelic_mysql_extension" default="jar" basedir=".">
+<project name="newrelic_mysql_extension" default="dist" basedir=".">
     <property name="srcdir" value="src/"/>
     <property name="builddir" value="build"/>
 	<property name="libdir" value="lib"/>
 	<property name="distdir" location="dist"/>
+	<property name="confdir" location="config"/>
+	<property name="scriptdir" location="scripts"/>
 	<property name="version" value="beta"/>
     <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
 
@@ -14,7 +16,6 @@
         <pathelement location="${platform-metrics-java}"/>
         <pathelement location="${mysql-connector}"/>
     </path>
-    
     <target name="init" depends="clean">
         <echo>Creating directory: ${builddir}</echo>
         <mkdir dir="${builddir}"/>
@@ -32,7 +33,6 @@
     <target name="clean">
         <echo>Cleaning project...</echo>
         <delete dir="${builddir}"/>
-        <delete file="${jarfile}"/>
         <echo>Done.</echo>
     </target>
 
@@ -53,5 +53,15 @@
             <fileset dir="${builddir}"/>
             <zipfileset src="${platform-metrics-java}"/> 
        </jar>
+    </target>
+
+    <target name="dist" depends="jar" description="create a downloadable file">
+      <mkdir dir="${distdir}/config"/>
+       <copy todir="${distdir}/config">
+          <fileset dir="${confdir}" includes="**/*sample*" />
+      </copy>
+       <copy todir="${distdir}">
+          <fileset dir="${scriptdir}" />
+      </copy>
     </target>
 </project>
