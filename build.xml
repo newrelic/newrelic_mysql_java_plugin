@@ -8,6 +8,7 @@
 	<property name="scriptdir" location="scripts"/>
 	<property name="version" value="beta"/>
     <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
+    <property name="tarfile" value="${distdir}/newrelic_mysql_plugin-${version}.tar.gz"/>
 
     <property name="platform-metrics-java" value="${libdir}/metrics_publish-beta.jar"/>
     <property name="mysql-connector" value="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
@@ -63,5 +64,8 @@
        <copy todir="${distdir}">
           <fileset dir="${scriptdir}" />
       </copy>
+      <tar compression="gzip" destfile="${tarfile}">
+        <tarfileset dir="${distdir}" />
+      </tar>
     </target>
 </project>
