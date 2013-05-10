@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.3.0";
+	private static final String version = "0.4.0";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -162,8 +162,8 @@ public class MySQLAgent extends Agent {
 		 	/* Innodb Specific Metrics */
 		 	float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
 		 	float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
-	    	derived.put("newrelic/innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
-	    			                                             (innodb_read_requests + innodb_reads)) * 100.0);
+	    	derived.put("newrelic/pct_innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
+	    			                                                 (innodb_read_requests + innodb_reads)) * 100.0);
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating New Relic custom metrics. " + e.getMessage());	 		
 	 	}
@@ -231,8 +231,7 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "count"));
 
 		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "pct"));
-
-		addMetricMeta("newrelic/innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
+		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
 
 	 	/* Define improved metric values for certain general metrics */
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));

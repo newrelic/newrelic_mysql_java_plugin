@@ -34,6 +34,8 @@
     <target name="clean">
         <echo>Cleaning project...</echo>
         <delete dir="${builddir}"/>
+        <delete file="${jarfile}"/>
+        <delete file="${tarfile}"/>
         <echo>Done.</echo>
     </target>
 
@@ -60,7 +62,9 @@
       <mkdir dir="${distdir}/config"/>
        <copy todir="${distdir}/config">
           <fileset dir="${confdir}" includes="**/*sample*" />
-      </copy>
+       </copy>
+       <copy file="${confdir}/metric.category.json" todir="${distdir}/config" />
+       <copy file="README" todir="${distdir}" />
        <copy todir="${distdir}">
           <fileset dir="${scriptdir}" />
       </copy>

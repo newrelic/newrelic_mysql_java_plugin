@@ -22,7 +22,7 @@ public class MySQL {
 
 	public static final String AGENT_DEFAULT_HOST = "localhost:3306";
 	public static final String AGENT_DEFAULT_USER = "newrelic";
-	public static final String AGENT_DEFAULT_PASSWD = "sakila";
+	public static final String AGENT_DEFAULT_PASSWD = "f63c225f4abe9e13";
 	public static final String AGENT_DEFAULT_PROPERTIES = "";
 	public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
 	public static final String SEPARATOR = "/";
