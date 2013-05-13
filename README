@@ -2,33 +2,40 @@ MySQL plugin for New Relic
 ==========================
 
 Prerequisites
+-------------
 
-The MySQL plugin for New Relic requires the following prerequisites
+The MySQL plugin for New Relic requires the following prerequisites:
 
   1. A New Relic account. Signup for a free account at http://newrelic.com
   2. A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
-  3. The MySQL server or another applicable server with a configured Java Runtime (JRE) environment Version 1.5 or better.
+  3. A configured Java Runtime (JRE) environment Version 1.5 or better
 
-Downloading the MySQL plugin for New Relic
+Download
+--------
 
-  1. Download and unpack the New Relic plugin for MySQL from ???
+To run the MySQL plugin for New Relic, you require the software and the MySQL Connector/J:
+
+  1. Download and unpack the New Relic plugin for MySQL from Plugin Central
   2. Download the MySQL Connector/J from http://dev.mysql.com/downloads/connector/j/
 
 The following instructions help to automate the process.
 
  $ wget http://s3.amazonaws.com/new_relic_platform_plugin_binary_hosting/mysql_plugin/newrelic_mysql_plugin-beta.tar.gz
- $ tar xvfz newrelic_mysql_plugin*.tar.gz
+ $ tar xfz newrelic_mysql_plugin*.tar.gz
  $ sh ./get_mysql_connector.sh
 
 
 Configuring your Agent Environment
+----------------------------------
 
-The New Relic plugin for MySQL runs an Agent process to collect and report MySQL metrics to New Relic. The following steps
-configure this agent for your specific environment.
+The New Relic plugin for MySQL runs an Agent process to collect and report MySQL metrics to New Relic. 
+The following steps configure this agent for your specific environment.
+CREATE USER newrelic@localhost IDENTIFIED BY PASSWORD '*B8B274C6AF8165B631B4B517BD0ED2694909F464';
+GRANT PROCESS,REPLICATION CLIENT ON *.* TO newrelic@localhost;
 
-  1.  New Relic Account License Key
-  2.  MySQL privileges
-  3.  MySQL properties
+  1.  Enter New Relic Account License Key
+  2.  Create MySQL user
+  3.  Create MySQL properties
   
   
 1. New Relic License
@@ -38,19 +45,13 @@ Specific your current license key in the necessary properties file.
  $ cp config/newrelic.properties.example config/newrelic.properties
  # Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
 
-2. MySQL Privileges
+2. Create MySQL User
 
-When deploying a MySQL plugin on each MySQL server, you require the following MySQL user privileges.
+The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL file.
 
-mysql> CREATE USER newrelic@localhost IDENTIFIED BY PASSWORD '*B8B274C6AF8165B631B4B517BD0ED2694909F464';
-mysql> GRANT PROCESS,REPLICATION CLIENT ON *.* TO newrelic@localhost;
-
-You can choose to use a different MySQL user name and password if you desire. These are defaults to simplify further installation.
-
-When deploying a MySQL Plugin on a common server, the necessary change is to grant privileges to the applicable hostname,
-or host mask, i.e. changing the value of "localhost" in the 2 SQL statements appropriately, e.g. to "10.%" if your servers 
-run with this IP range.
-
+ $ mysql -uroot -p < mysql_user.sql
+ 
+You can choose to use a different MySQL user name and password if you desire. See the file MYSQL for more information.
 
 3. MySQL Properties
 
@@ -67,55 +68,14 @@ previous step, you only need to give your MySQL instance a meaningful name.  All
         "name"   : "Server/Instance Name",
     }
  ]
-
-
-You can override all necessary MySQL details. The following is an example syntax.
-
- [
-    {
-        "name"       : "Server/Instance Name",
-        "host"       : "localhost:3306",
-        "user"       : "newrelic",
-        "passwd"     : "Your Password Here",
-        "properties" : "?profileSQL=true",
-        "metrics"    : "status,slave"
-    },
-  ]
   
 Running the Agent
+-----------------
 
  $ sh ./run_mysql_plugin.sh
 
- 
-MySQL Metric Categories
- 
-The New Relic plugin is an extensible architecture, allowing you to define your
-own new MySQL metrics that can be obtained via an SQL statement.  As new MySQL 
-versions are released, or with additional MySQL third-party storage engines 
-addtional information is available for gathering and instrumenting.
-
-Providing an SQL statement can return either a set of rows of key/value results,
-or return a single row of many columns with a single value, and those values are 
-numeric (a New Relic limitation), the MySQL plugin can record this information 
-in New Relic.
-
-The config/metric.category.json file includes the default categories of MySQL metrics
-and provides some additional examples for reference.
-
-The obvious commands SHOW GLOBAL STATUS, SHOW MASTER STATUS and SHOW SLAVE STATUS 
-satisfy the previous formatting requirements. Additionally commands that select
-information from the INFORMATION_SCHEMA, PERFORMANCE_SCHEMA or other tables are possible,
-for example in MySQL 5.5 SELECT * FROM INFORMATION_SCHEMA.innodb_buffer_pool_stats and
-in MySQL 5.6 SELECT name, count FROM INFORMATION_SCHEMA.innodb_metrics provide additional
-information. 
-
-Commands such as SHOW ENGINE INNODB STATUS and SHOW ENGINE INNODB MUTEX are not 
-currently supported because they do not fall into the above two categories.
-
-The "metrics" configuration for each MySQL Instance is a CSV list of metric categories 
-that are collected for each MySQL Instance.
-
 
 Source Code
+-----------
 
 This plugin can be found at https://github.com/newrelic-platform/newrelic_mysql_extension

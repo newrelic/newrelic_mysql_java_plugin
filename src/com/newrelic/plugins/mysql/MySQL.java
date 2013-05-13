@@ -163,13 +163,14 @@ public class MySQL {
      * @param val String value to evaluate
      * @return String value that best represents and integer 
      */
-     static String transformStringMetric(String val) {
-      	if ("ON".equals(val) || "TRUE".equals(val)) return "1";			// Convert some TEXT metrics into numerics
-    	if ("OFF".equals(val) || "NONE".equals(val)) return "0";
-    	if ("YES".equals(val)) return "1";								// For slave/slave_*_running
-    	if ("NO".equals(val)) return "0";								// For slave/slave_*_running
-     	if ("NULL".equals(val)) return "-1";							// For slave/seconds_behind_master
-     	return val;
+    static String transformStringMetric(String val) {
+    	val = val.toUpperCase(); 
+		if ("ON".equals(val)  || "TRUE".equals(val)) return "1";		// Convert some TEXT metrics into numerics
+		if ("OFF".equals(val) || "NONE".equals(val)) return "0";
+		if ("YES".equals(val))  return "1";								// For slave/slave_*_running
+		if ("NO".equals(val))   return "0";								// For slave/slave_*_running
+		if ("NULL".equals(val)) return "-1";							// For slave/seconds_behind_master
+		return val;
      }
 
  	/**

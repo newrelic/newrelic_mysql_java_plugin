@@ -1,0 +1,27 @@
+MySQL Metric Categories
+ 
+The New Relic plugin is an extensible architecture, allowing you to define your
+own new MySQL metrics that can be obtained via an SQL statement.  As new MySQL 
+versions are released, or with additional MySQL third-party storage engines 
+addtional information is available for gathering and instrumenting.
+
+Providing an SQL statement can return either a set of rows of key/value results,
+or return a single row of many columns with a single value, and those values are 
+numeric (a New Relic limitation), the MySQL plugin can record this information 
+in New Relic.
+
+The config/metric.category.json file includes the default categories of MySQL metrics
+and provides some additional examples for reference.
+
+The obvious commands SHOW GLOBAL STATUS, SHOW MASTER STATUS and SHOW SLAVE STATUS 
+satisfy the previous formatting requirements. Additionally commands that select
+information from the INFORMATION_SCHEMA, PERFORMANCE_SCHEMA or other tables are possible,
+for example in MySQL 5.5 SELECT * FROM INFORMATION_SCHEMA.innodb_buffer_pool_stats and
+in MySQL 5.6 SELECT name, count FROM INFORMATION_SCHEMA.innodb_metrics provide additional
+information. 
+
+Commands such as SHOW ENGINE INNODB STATUS and SHOW ENGINE INNODB MUTEX are not 
+currently supported because they do not fall into the above two categories.
+
+The "metrics" configuration for each MySQL Instance is a CSV list of metric categories 
+that are collected for each MySQL Instance.

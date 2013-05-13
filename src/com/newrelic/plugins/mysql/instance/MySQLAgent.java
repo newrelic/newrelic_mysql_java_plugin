@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.4.0";
+	private static final String version = "0.5.0";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -146,19 +146,28 @@ public class MySQLAgent extends Agent {
 		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
 	
 		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
-	
+
+	    	/* Query Cache */
+		 	float qc_hits = existing.get("status/qcache_hits").floatValue();
+		 	float reads = existing.get("status/com_select").floatValue();
+		 	
+		 	derived.put("newrelic/pct_query_cache_utilization", (qc_hits / (qc_hits + reads))* 100.0); 
+		 	
 		 	/* Replication specifics */
 	 		if (metrics.contains("slave" + COMMA)) {					// "slave" category is a pre-requisite for these metrics
 			 	derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
-			 	int slave_io_thread_running = existing.get("slave/slave_io_thread").intValue();
-			 	int slave_sql_thread_running = existing.get("slave/slave_sql_thread").intValue();
+			 	int slave_io_thread_running = existing.get("slave/slave_io_running").intValue();
+			 	int slave_sql_thread_running = existing.get("slave/slave_sql_running").intValue();
 			 	
 			 	/* both need to be YES, which is 1 */
 			 	int replication_status = 1;								// Default as in ERROR
 			 	if (slave_io_thread_running + slave_sql_thread_running == 2) 
 			 		replication_status = 0;
 			 	derived.put("newrelic/replication_status", replication_status);
-	 		} 
+	 		} else {													// This is a hack because the NR UI can't handle it missing for graphs
+			 	derived.put("newrelic/replication_lag", 0);
+			 	derived.put("newrelic/replication_status", 0);
+ 	 		}
 		 	/* Innodb Specific Metrics */
 		 	float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
 		 	float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
@@ -226,12 +235,16 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("newrelic/bytes_reads", new MetricMeta(true, "bytes/sec"));
 		addMetricMeta("newrelic/bytes_writes", new MetricMeta(true, "bytes/sec"));
 
-		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "count"));
-		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "count"));
-		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "count"));
+		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "value"));
+		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "value"));
+		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "value"));
 
 		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "pct"));
 		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
+		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "pct"));
+
+		addMetricMeta("newrelic/replication_lag", new MetricMeta(false, "value"));
+		addMetricMeta("newrelic/replication_status", new MetricMeta(false, "value"));
 
 	 	/* Define improved metric values for certain general metrics */
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
