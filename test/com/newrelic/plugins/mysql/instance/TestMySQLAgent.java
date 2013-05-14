@@ -2,7 +2,6 @@ package com.newrelic.plugins.mysql.instance;
 
 import static org.junit.Assert.*;
 
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -2,20 +2,14 @@ package com.newrelic.plugins.mysql.instance;
 
 import static org.junit.Assert.*;
 
-import java.sql.Connection;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.newrelic.metrics.publish.configuration.ConfigurationException;
-import com.newrelic.plugins.mysql.MetricMeta;
-import com.newrelic.plugins.mysql.MySQL;
 
 public class TestMySQLAgentFactory {
 

@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.5.0";
+	private static final String version = "0.5.3";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -133,26 +133,75 @@ public class MySQLAgent extends Agent {
 					                       existing.get("status/com_update").intValue() + existing.get("status/com_update_multi").intValue() +
 					                       existing.get("status/com_delete").intValue() + existing.get("status/com_delete_multi").intValue() +
 					                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
-	
+
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating read/write volume " + e.getMessage());	 		
+	 	}
+
+	 	try {															// Catch any number conversion problems
 	    	/* read and write throughput */
 		 	derived.put("newrelic/bytes_reads", existing.get("status/bytes_sent").intValue());
 		 	derived.put("newrelic/bytes_writes", existing.get("status/bytes_received").intValue());
-	
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating read/write throughput " + e.getMessage());	 		
+	 	}
+
+	 	try {															// Catch any number conversion problems
 	    	/* Connection management */
 		 	float threads_connected = existing.get("status/threads_running").floatValue();
 		 	float threads_running = existing.get("status/threads_running").floatValue();
 		 	derived.put("newrelic/connections_connected", (int)threads_connected);
 		 	derived.put("newrelic/connections_running", (int)threads_running);
+		 	derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
 		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
-	
 		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
+
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating connection " + e.getMessage());	 		
+	 	}
+
+	 	try {															// Catch any number conversion problems
+		 	/* InnoDB Metrics */
+		 	derived.put("newrelic/innodb_bp_pages_created", existing.get("status/innodb_pages_created").intValue());
+		 	derived.put("newrelic/innodb_bp_pages_read", existing.get("status/innodb_pages_read").intValue());
+		 	derived.put("newrelic/innodb_bp_pages_written", existing.get("status/innodb_pages_written").intValue());	
+
+		 	/* Innodb Specific Metrics */
+		 	float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
+		 	float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
+	    	derived.put("newrelic/pct_innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
+	    			                                                 (innodb_read_requests + innodb_reads)) * 100.0);
+
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating InnoDB metrics " + e.getMessage());	 		
+	 	}
+	
+	 	try {															// Catch any number conversion problems
 
 	    	/* Query Cache */
 		 	float qc_hits = existing.get("status/qcache_hits").floatValue();
 		 	float reads = existing.get("status/com_select").floatValue();
-		 	
+
+		 	derived.put("newrelic/query_cache_hits", (int)qc_hits);
+		 	derived.put("newrelic/query_cache_misses", existing.get("status/qcache_inserts").intValue());
+		 	derived.put("newrelic/query_cache_not_cached", existing.get("status/qcache_not_cached").intValue());	
+
 		 	derived.put("newrelic/pct_query_cache_utilization", (qc_hits / (qc_hits + reads))* 100.0); 
-		 	
+
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating Query Cache Metrics " + e.getMessage());	 		
+	 	}
+
+	 	try {															// Catch any number conversion problems
+		 	float tmp_tables = existing.get("status/created_tmp_tables").floatValue();
+		 	float tmp_tables_disk = existing.get("status/created_tmp_disk_tables").floatValue();
+
+		 	derived.put("newrelic/pct_tmp_tables_to_disk", (tmp_tables_disk/tmp_tables)* 100.0); 
+
+	 	} catch (Exception e) {
+		 	logger.severe("An error occured calculating Temporary Table metrics " + e.getMessage());	 		
+	 	}
+	 	try {															// Catch any number conversion problems
 		 	/* Replication specifics */
 	 		if (metrics.contains("slave" + COMMA)) {					// "slave" category is a pre-requisite for these metrics
 			 	derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
@@ -168,13 +217,8 @@ public class MySQLAgent extends Agent {
 			 	derived.put("newrelic/replication_lag", 0);
 			 	derived.put("newrelic/replication_status", 0);
  	 		}
-		 	/* Innodb Specific Metrics */
-		 	float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
-		 	float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
-	    	derived.put("newrelic/pct_innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
-	    			                                                 (innodb_read_requests + innodb_reads)) * 100.0);
 	 	} catch (Exception e) {
-		 	logger.severe("An error occured calculating New Relic custom metrics. " + e.getMessage());	 		
+		 	logger.severe("An error occured calculating Replication Metrics " + e.getMessage());	 		
 	 	}
 
 	 	return derived;
@@ -229,32 +273,38 @@ public class MySQLAgent extends Agent {
 	 	}
 
 	 	/* Define New Relic specific metrics used for default dashboards */
-		addMetricMeta("newrelic/volume_reads", new MetricMeta(true, "queries/sec"));
-		addMetricMeta("newrelic/volume_writes", new MetricMeta(true, "queries/sec"));
+		addMetricMeta("newrelic/volume_reads", new MetricMeta(true, "Queries/Second"));
+		addMetricMeta("newrelic/volume_writes", new MetricMeta(true, "Queries/Second"));
 
-		addMetricMeta("newrelic/bytes_reads", new MetricMeta(true, "bytes/sec"));
-		addMetricMeta("newrelic/bytes_writes", new MetricMeta(true, "bytes/sec"));
+		addMetricMeta("newrelic/bytes_reads", new MetricMeta(true, "Bytes/Second"));
+		addMetricMeta("newrelic/bytes_writes", new MetricMeta(true, "Bytes/Second"));
 
-		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "value"));
-		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "value"));
-		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "value"));
+		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "Connections"));
+		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "Connections"));
+		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "Connections"));
 
-		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "pct"));
-		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "pct"));
-		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "pct"));
+		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_tmp_tables_to_disk", new MetricMeta(false, "Percent"));
 
-		addMetricMeta("newrelic/replication_lag", new MetricMeta(false, "value"));
-		addMetricMeta("newrelic/replication_status", new MetricMeta(false, "value"));
+	
+		addMetricMeta("newrelic/innodb_bp_pages_created", new MetricMeta(true, "Pages/Second"));
+		addMetricMeta("newrelic/innodb_bp_pages_read", new MetricMeta(true, "Pages/Second"));
+		addMetricMeta("newrelic/innodb_bp_pages_written", new MetricMeta(true, "Pages/Second"));
+
+		addMetricMeta("newrelic/replication_lag", new MetricMeta(false, "Seconds"));
+		addMetricMeta("newrelic/replication_status", new MetricMeta(false, "State"));
 
 	 	/* Define improved metric values for certain general metrics */
-		addMetricMeta("status/bytes_received", new MetricMeta(true, "bytes/sec"));
-		addMetricMeta("status/bytes_sent", new MetricMeta(true, "bytes/sec"));
-		addMetricMeta("status/com_select", new MetricMeta(true, "selects/sec"));
-		addMetricMeta("status/com_insert", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("status/com_insert_select", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("status/com_update", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("status/com_delete", new MetricMeta(true, "ops/sec"));
-		addMetricMeta("status/com_replace", new MetricMeta(true, "ops/sec"));
+		addMetricMeta("status/bytes_received", new MetricMeta(true, "Bytes/Second"));
+		addMetricMeta("status/bytes_sent", new MetricMeta(true, "Bytes/Second"));
+		addMetricMeta("status/com_select", new MetricMeta(true, "Selects/Second"));
+		addMetricMeta("status/com_insert", new MetricMeta(true, "Ops/Second"));
+		addMetricMeta("status/com_insert_select", new MetricMeta(true, "Ops/Second"));
+		addMetricMeta("status/com_update", new MetricMeta(true, "Ops/Second"));
+		addMetricMeta("status/com_delete", new MetricMeta(true, "Ops/Second"));
+		addMetricMeta("status/com_replace", new MetricMeta(true, "Ops/Second"));
 
 	}
 

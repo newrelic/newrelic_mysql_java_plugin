@@ -14,8 +14,8 @@ import com.newrelic.metrics.publish.processors.EpochCounter;;
  */
 public class MetricMeta {
 
-		public final static String DEFAULT_UNIT ="value";
-		public final static String DEFAULT_COUNTER_UNIT = DEFAULT_UNIT + "/sec";
+		public final static String DEFAULT_UNIT ="Operations";
+		public final static String DEFAULT_COUNTER_UNIT = DEFAULT_UNIT + "/Second";
 
 		public final static String INTEGER_TYPE = "int";
 		public final static String FLOAT_TYPE = "float";
