@@ -30,8 +30,8 @@ The following instructions help to automate these steps.
 Configuring your Agent Environment
 ----------------------------------
 
-The New Relic plugin for MySQL runs an Agent process to collect and report MySQL metrics to New Relic. 
-The following steps configure this agent for your specific environment.
+The New Relic plugin for MySQL runs an Agent process to collect and report MySQL metrics to 
+New Relic. The following steps configure this agent for your specific environment.
 
   1.  Enter New Relic Account License Key
   2.  Create MySQL user
@@ -41,28 +41,35 @@ The following steps configure this agent for your specific environment.
 1. New Relic License
 
 Specific your current license key in the necessary properties file.
+Your licence key can be found under Account Settings at https://rpm.newrelic.com
+
 
  $ cp config/newrelic.properties.example config/newrelic.properties
- # Edit config/newrelic.properties and enter your license key found under Account Settings at https://rpm.newrelic.com
+ # Edit config/newrelic.properties and enter your license key.
+ 
 
 2. Create MySQL User
 
-The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL file.
+The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, 
+run the following SQL file.
 
  $ mysql -uroot -p < mysql_user.sql
  
-You can choose to use a different MySQL user name and password if you desire. See the file MYSQL.TXT for more information.
+You can choose to use a different MySQL user name and password if you desire. See the file 
+MYSQL.TXT for more information.
 
 3. MySQL Properties
 
-Each running MySQL plugin agent requires a JSON configuration file defining the access to the MySQL instance(s).
+Each running MySQL plugin agent requires a JSON configuration file defining the access to 
+the MySQL instance(s). An example file is provided in the config directory.
 
  $ cp config/mysql.instance.json.sample config/mysql.instance.json
  # Edit config/mysql.instance.json
 
-If you have configured the Agent to run on the MySQL instance, and used the MySQL user privileges in the 
-previous step, you only need to give your MySQL instance a meaningful name.  All other options will use defaults.
-Set the value for the "name" attribute to match your MySQL databases purpose, e.g. "Production Master"
+If you have configured the Agent to run on the MySQL instance, and used the MySQL user 
+privileges in the previous step, you only need to give your MySQL instance a meaningful
+name.  All other options will use defaults.Set the value for the "name" attribute to match 
+your MySQL databases purpose, e.g. "Production Master".
 
  [
     {
