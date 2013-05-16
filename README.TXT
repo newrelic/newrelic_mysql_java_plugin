@@ -44,7 +44,7 @@ Specific your current license key in the necessary properties file.
 Your licence key can be found under Account Settings at https://rpm.newrelic.com
 
 
- $ cp config/newrelic.properties.example config/newrelic.properties
+ $ cp config/newrelic.properties.sample config/newrelic.properties
  # Edit config/newrelic.properties and enter your license key.
  
 
