@@ -64,9 +64,9 @@
           <fileset dir="${confdir}" includes="**/*sample*" />
        </copy>
        <copy file="${confdir}/metric.category.json" todir="${distdir}/config" />
-       <copy file="README" todir="${distdir}" />
-       <copy file="MYSQL" todir="${distdir}" />
-       <copy file="CATEGORIES" todir="${distdir}" />
+       <copy file="README.TXT" todir="${distdir}" />
+       <copy file="MYSQL.TXT" todir="${distdir}" />
+       <copy file="CATEGORIES.TXT" todir="${distdir}" />
        <copy todir="${distdir}">
           <fileset dir="${scriptdir}" />
       </copy>
