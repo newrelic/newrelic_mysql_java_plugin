@@ -7,7 +7,10 @@ import com.newrelic.metrics.publish.processors.EpochCounter;;
  * This enables the Agent to work more intelligently with the global MySQL commands,
  * by default knowing nothing, but then being able to define better unit names, identifying counters etc
  * 
- * TODO:  Enable a factor multiplication, so we can easily convert bytes to MB for example.
+ * Currently a Metric can have the following attributes
+ * 
+ * - Counter  (Yes/No).   The default is Yes
+ * - Unit Name
  * 
  * @author Ronald Bradford me@ronaldbradford.com
  *
@@ -17,11 +20,7 @@ public class MetricMeta {
 		public final static String DEFAULT_UNIT ="Operations";
 		public final static String DEFAULT_COUNTER_UNIT = DEFAULT_UNIT + "/Second";
 
-		public final static String INTEGER_TYPE = "int";
-		public final static String FLOAT_TYPE = "float";
-		
 		private String unit;
-		private String type = INTEGER_TYPE;
 		private EpochCounter counter = null;
 		
 		public MetricMeta(boolean isCounter, String unit) {
@@ -49,9 +48,4 @@ public class MetricMeta {
 		public EpochCounter getCounter() {
 			return this.counter;
 		}
-		
-		public String getType() {
-			return this.type;
-		}
-
 }

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  */
 public class MySQL {
 
-	public static final String AGENT_DEFAULT_HOST = "localhost";
+	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
 	public static final String AGENT_DEFAULT_USER = "newrelic";
 	public static final String AGENT_DEFAULT_PASSWD = "f63c225f4abe9e13";
 	public static final String AGENT_DEFAULT_PROPERTIES = "";
@@ -28,14 +28,14 @@ public class MySQL {
 	public static final String SEPARATOR = "/";
 
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
-	private  Connection conn = null;									// Database Connection
+	private  Connection conn = null;									// Cached Database Connection
 
 	public MySQL() {
 	}
 
 	/**
-     * Get a new MySQL database connection  
-      *  
+     * This method will return a new MySQL database connection  
+     *  
      * @param host  String Hostname for MySQL Connection
      * @param user  String Database username for MySQL Connection
      * @param passwd String database password for MySQL Connection
@@ -53,7 +53,8 @@ public class MySQL {
 	}
 
 	/**
-	 * This method will return a MySQL database connection for use
+	 * This method will return a MySQL database connection for use, either a new connection
+	 * or a cached connection
 	 * 
      * @param host  String Hostname
      * @param user  String Database username
@@ -80,27 +81,13 @@ public class MySQL {
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs
 	 */
-	
-	public static Number translateStringToNumber(String val) {
-		try {
-			 if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
- 				return (float)Float.parseFloat(val);
-			 } else {
- 				return new BigInteger(val);
-			 }
-		} catch (Exception e) {
- 			logger.warning("Unable to parse int/float number from value " + val);
- 		}
-		return 0;
-	}
-	
     public static Map<String,Number> runSQL(Connection c, String category, String SQL, Boolean singleRow) {
     	Statement stmt = null;
     	ResultSet rs = null;
     	Map<String, Number> results = new HashMap<String,Number>();
 
     	try {
-	    	logger.info("Running " + SQL);
+	    	logger.info("Running SQL Statement " + SQL);
 			stmt = c.createStatement();
             rs = stmt.executeQuery(SQL);								// Execute the given SQL statement
             ResultSetMetaData md = rs.getMetaData();					// Obtain Meta data about the SQL query (column names etc)
@@ -156,6 +143,25 @@ public class MySQL {
         return runSQL( c, category, SQL, false);
     }
 
+	/**
+	 * This method will convert the provided string into a Number (either int or float)
+	 * 
+	 * @param String value to convert
+	 * @return Number A int or float representation of the provided string
+	 */
+	public static Number translateStringToNumber(String val) {
+		try {
+			 if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
+ 				return (float)Float.parseFloat(val);
+			 } else {
+ 				return new BigInteger(val);
+			 }
+		} catch (Exception e) {
+ 			logger.warning("Unable to parse int/float number from value " + val);
+ 		}
+		return 0;
+	}
+
  	/**
      * Perform some preliminary transformation of string values that can be 
      * represented in integer values for monitoring
@@ -187,7 +193,11 @@ public class MySQL {
    		return false;
  	}
 
-     
+    /**
+     * Set the System Logger for this class
+     * 
+     * @param Logger 
+     */
 	public static void setLogger(Logger _logger) {
 		logger = _logger;
 	}

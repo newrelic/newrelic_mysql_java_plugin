@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.5.3";
+	private static final String version = "0.6.0";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -45,6 +45,7 @@ public class MySQLAgent extends Agent {
 
 	final Logger logger;												// Local convenience variable
 
+	private boolean firstReport = true;
  	/**
  	 * Default constructor to create a new MySQL Agent
  	 * @param map 
@@ -58,7 +59,7 @@ public class MySQLAgent extends Agent {
  	public MySQLAgent(String name, String host, String user, String passwd, String properties, String metrics, Map<String, Object> metricCategories) {
 	   	super(GUID, version);
 
-	   	this.name = name;
+	   	this.name = name;												// Set local attributes for new class object
 	   	this.host = host;
 	   	this.user = user;
 	   	this.passwd = passwd;
@@ -68,7 +69,7 @@ public class MySQLAgent extends Agent {
 
 	   	this.m = new MySQL();
 	   	
-	   	logger = Context.getLogger();									// Set logging to current Context
+	   	logger = Context.getLogger();				    				// Set logging to current Context
 	   	MySQL.setLogger(logger);										// Push logger to MySQL Object
 	   	createMetaData();												// Define incremental counters that are value/sec etc
 	}
@@ -83,6 +84,7 @@ public class MySQLAgent extends Agent {
 	 	
 		Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics 
 		reportMetrics(results);											// Report Metrics to New Relic
+		firstReport = false;
 	}
 
 	/**
@@ -98,12 +100,12 @@ public class MySQLAgent extends Agent {
 	 	Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
 
 	 	Iterator<String> iter = categories.keySet().iterator();	
-	 	metrics = metrics + COMMA;
+	 	metrics = metrics + COMMA;										// Add trailing comma for search criteria
 	 	while (iter.hasNext()) {
 	 		String category = (String)iter.next();
 			@SuppressWarnings("unchecked")
 			Map<String, String> attributes = (Map<String,String>)categories.get(category);
-	 		if (metrics.contains(category + COMMA)) 
+	 		if (metrics.contains(category + COMMA)) 					// Use a dumb search, including comma to handle overlapping categories
 	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), "row".equals(attributes.get("result"))));
 	 	}
 	 	results.putAll(newRelicMetrics(results, metrics));
@@ -124,7 +126,7 @@ public class MySQLAgent extends Agent {
  		if (!metrics.contains("newrelic" + COMMA)) return derived;		// Only calculate newrelic category if specified.
  		if (!metrics.contains("status" + COMMA)) return derived;		// "status" category is a pre-requisite
 
-	 	logger.info("Adding NewRelic derived metrics");
+	 	logger.fine("Adding New Relic derived metrics");
 
 	 	try {															// Catch any number conversion problems
 		 	/* read and write volume */
@@ -153,7 +155,7 @@ public class MySQLAgent extends Agent {
 		 	derived.put("newrelic/connections_connected", (int)threads_connected);
 		 	derived.put("newrelic/connections_running", (int)threads_running);
 		 	derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
-		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
+//		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
 		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
 
 	 	} catch (Exception e) {
@@ -230,7 +232,8 @@ public class MySQLAgent extends Agent {
 	 * @param Map results 
 	 */
 	public void reportMetrics(Map<String,Number> results) { 
-	 	logger.info("Reporting " + results.size() + " metrics");
+		int count = 0;
+	 	logger.info("[" + name + "] Collected " + results.size() + " metrics");
 	 	logger.finest(results.toString());
 
 	 	Iterator<String> iter = results.keySet().iterator();			
@@ -238,18 +241,25 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
-
-	 		if (md.isCounter()) {										// Metric is a counter
-					reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
-			} else {													// Metric is a fixed Number
-				if (java.lang.Float.class.equals(results.get(key).getClass())) {	
-					reportMetric(key, md.getUnit(), val.floatValue()); 	// We are working with a float value
-	 			} else {
- 					reportMetric(key , md.getUnit(), val.intValue());	// We are working with an int
- 				}
+	 		if (md != null) {
+		 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
+		 		count++;
+	
+		 		if (md.isCounter()) {										// Metric is a counter
+						reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
+				} else {													// Metric is a fixed Number
+					if (java.lang.Float.class.equals(results.get(key).getClass())) {	
+						reportMetric(key, md.getUnit(), val.floatValue()); 	// We are working with a float value
+		 			} else {
+	 					reportMetric(key , md.getUnit(), val.intValue());	// We are working with an int
+	 				}
+		 		}
+	 		} else { // md != null
+	 			if (firstReport)
+	 				logger.warning("Not reporting identified metric " + key); 			
 	 		}
 	 	}
+	 	logger.info("[" + name + "] Reported to New Relic " + count + " metrics");
 	}
 
 	/**
@@ -257,21 +267,6 @@ public class MySQLAgent extends Agent {
 	 * and New Relic specific metrics.
 	 */
 	private void createMetaData() {
-	 	Map<String,Object> categories = getMetricCategories(); 			// GetcreateMetaData current Metric Categories
-	 	Iterator<String> iter = categories.keySet().iterator();	
-	 	while (iter.hasNext()) {
-	 		String category = (String)iter.next();
-			@SuppressWarnings("unchecked")
-			Map<String, String> attributes = (Map<String,String>)categories.get(category);
-			String valueMetrics = attributes.get("value_metrics");
-			if (valueMetrics != null) {
-				Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().split(MySQLAgent.COMMA)));
-				for (String s: metrics) {
-					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
-				}
-			}
-	 	}
-
 	 	/* Define New Relic specific metrics used for default dashboards */
 		addMetricMeta("newrelic/volume_reads", new MetricMeta(true, "Queries/Second"));
 		addMetricMeta("newrelic/volume_writes", new MetricMeta(true, "Queries/Second"));
@@ -282,19 +277,22 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "Connections"));
 		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "Connections"));
 		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "Connections"));
-
-		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "Percent"));
-		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "Percent"));
-		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "Percent"));
-		addMetricMeta("newrelic/pct_tmp_tables_to_disk", new MetricMeta(false, "Percent"));
-
 	
 		addMetricMeta("newrelic/innodb_bp_pages_created", new MetricMeta(true, "Pages/Second"));
 		addMetricMeta("newrelic/innodb_bp_pages_read", new MetricMeta(true, "Pages/Second"));
 		addMetricMeta("newrelic/innodb_bp_pages_written", new MetricMeta(true, "Pages/Second"));
 
+		addMetricMeta("newrelic/query_cache_hits", new MetricMeta(true, "Queries/Seconds"));
+		addMetricMeta("newrelic/query_cache_misses", new MetricMeta(true, "Queries/Seconds"));
+		addMetricMeta("newrelic/query_cache_not_cached", new MetricMeta(true, "Queries/Seconds"));
+	
 		addMetricMeta("newrelic/replication_lag", new MetricMeta(false, "Seconds"));
 		addMetricMeta("newrelic/replication_status", new MetricMeta(false, "State"));
+
+		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_tmp_tables_to_disk", new MetricMeta(false, "Percent"));
 
 	 	/* Define improved metric values for certain general metrics */
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "Bytes/Second"));
@@ -305,7 +303,40 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("status/com_update", new MetricMeta(true, "Ops/Second"));
 		addMetricMeta("status/com_delete", new MetricMeta(true, "Ops/Second"));
 		addMetricMeta("status/com_replace", new MetricMeta(true, "Ops/Second"));
+	
+		addMetricMeta("status/innodb_buffer_pool_pages_data", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_dirty", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_flushed", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_free", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_misc", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_total", new MetricMeta(false, "Pages"));
 
+		addMetricMeta("status/innodb_os_log_written", new MetricMeta(true, "Bytes/Second"));
+
+		
+	 	Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
+	 	Iterator<String> iter = categories.keySet().iterator();	
+	 	while (iter.hasNext()) {
+	 		String category = (String)iter.next();
+			@SuppressWarnings("unchecked")
+			Map<String, String> attributes = (Map<String,String>)categories.get(category);
+			String valueMetrics = attributes.get("value_metrics");
+			if (valueMetrics != null) {
+				Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
+				for (String s: metrics) {
+					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
+				}
+			}
+			String counterMetrics = attributes.get("counter_metrics");
+			if (counterMetrics != null) {
+				Set<String> metrics = new HashSet<String>(Arrays.asList(counterMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
+				for (String s: metrics) {
+					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(true));
+				}
+			}
+	 	}
+			
+		
 	}
 
 	/**
@@ -315,7 +346,7 @@ public class MySQLAgent extends Agent {
 	 * @param Metric mm
 	 */
 	private void addMetricMeta(String key, MetricMeta mm) {
-		metricsMeta.put(key, mm); 		
+		metricsMeta.put(key.toLowerCase(), mm); 		
 	}
   
 	/**
@@ -328,13 +359,7 @@ public class MySQLAgent extends Agent {
 	 * @return MetridMeta  Structure of information about the metric
 	 */
 	private MetricMeta getMetricMeta(String key) {
- 		MetricMeta md = (MetricMeta)metricsMeta.get(key);				// Look for existing meta data on metric
- 		if (md == null) {												// If not found
-			logger.info("Adding default metric for " + key);
-			addMetricMeta(key, MetricMeta.defaultMetricMeta());			// create a default representation
- 	 		md = (MetricMeta)metricsMeta.get(key);
- 		}
- 		return md;
+ 		return (MetricMeta)metricsMeta.get(key.toLowerCase());				// Look for existing meta data on metric
 	}
 
 	/**
