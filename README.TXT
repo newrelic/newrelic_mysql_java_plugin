@@ -1,6 +1,9 @@
 MySQL plugin for New Relic
 ==========================
 
+PLEASE READ ALL OF THESE INSTRUCTIONS. Your New Relic MySQL plugin can be operational in 2 minutes
+when following all steps in this readme file.
+
 Prerequisites
 -------------
 
@@ -9,6 +12,7 @@ The MySQL plugin for New Relic requires the following prerequisites:
   1. A New Relic account. Signup for a free account at http://newrelic.com
   2. A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
   3. A configured Java Runtime (JRE) environment Version 1.6 or better
+  4. Internet access to download software, and report gathered metrics to New Relic.
 
 Download
 --------
@@ -18,7 +22,7 @@ To run the MySQL plugin for New Relic, you require the software and the MySQL Co
   1. Download and unpack the New Relic plugin for MySQL from Plugin Central
   2. Download the MySQL Connector/J from http://dev.mysql.com/downloads/connector/j/
 
-The following instructions help to automate these steps.
+The following instructions help to automate these steps on Linux systems.
 
  $ mkdir /path/to/newrelic-plugin
  $ cd /path/to/newrelic-plugin

@@ -45,4 +45,10 @@ These options are:
                  values are:   status,master,slave,newrelic.  Additional categories can be defined. See CATEGORIES.TXT 
                  for more information.
   
+ Known Issues
+ ------------
+ 
+ * If you are using MySQL 5.1.23 or older you will need to add the SUPER privilege to collect SHOW ENGINE INNODB STATUS.
+ * While all SQL metric commands should run with MySQL 5.0 and 5.1, due to the end of life policy of these versions, 
+   testing has only been performed with MySQL 5.5 and MySQL 5.6/
   
