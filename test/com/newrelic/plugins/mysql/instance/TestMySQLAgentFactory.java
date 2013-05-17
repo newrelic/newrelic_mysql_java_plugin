@@ -24,19 +24,25 @@ public class TestMySQLAgentFactory {
 		} catch (ConfigurationException e) {
 			fail(e.getMessage());
 		}
-		assertEquals(6, categories.size());
+		assertEquals(7, categories.size());
 		Object status = categories.get("status");
 		assertNotNull(status);
 		Map<String, String> map = (Map<String,String>)status;
 		assertEquals("SHOW GLOBAL STATUS", map.get("SQL"));
-		assertNull(map.get("result"));
+		assertEquals("set", map.get("result"));
 
 		Object slave = categories.get("slave");
 		assertNotNull(slave);
 		map = (Map<String,String>)slave;
 		assertEquals("SHOW SLAVE STATUS", map.get("SQL"));
 		assertEquals("row",map.get("result"));
-		
+
+		Object mutex = categories.get("innodb_mutex");
+		assertNotNull(mutex);
+		map = (Map<String,String>)mutex;
+		assertEquals("SHOW ENGINE INNODB MUTEX", map.get("SQL"));
+		assertEquals("special",map.get("result"));
+
 		Object doesnotexist = categories.get("doesnotexist");
 		assertNull(doesnotexist);
 		
@@ -51,7 +57,7 @@ public class TestMySQLAgentFactory {
 		} catch (ConfigurationException e) {
 			fail(e.getMessage());
 		}
-		assertEquals(6, categories.size());
+		assertEquals(7, categories.size());
 
 		Object status = categories.get("status");
 		assertNotNull(status);
@@ -60,9 +66,13 @@ public class TestMySQLAgentFactory {
 		String valueMetrics = map.get("value_metrics"); 
 		assertNotNull(valueMetrics);
 		Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().split(MySQLAgent.COMMA)));
-		assertEquals(30,metrics.size());
+		assertEquals(19,metrics.size());
 		assertTrue(metrics.contains("uptime"));
 		assertFalse(metrics.contains("com_select"));
+		String counterMetrics = map.get("counter_metrics"); 
+		assertNotNull(counterMetrics);
+		metrics = new HashSet<String>(Arrays.asList(counterMetrics.toLowerCase().split(MySQLAgent.COMMA)));
+		assertEquals(196,metrics.size());
 
 	}
 }

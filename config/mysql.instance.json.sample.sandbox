@@ -2,16 +2,16 @@
     {
         "name" : "Sandbox Master",
         "host" : "localhost:18675",
-        "metrics" "status,master"
+        "metrics" "newrelic,status,master"
     },
     {
         "name" : "Sandbox Slave 1",
         "host" : "localhost:18676",
-        "metrics" "status,slave"
+        "metrics" "newrelic,status,slave"
     },
     {
         "name" : "Sandbox Slave 2",
         "host" : "localhost:18677",
-        "metrics" "status,slave"
+        "metrics" "newrelic,status,slave"
     },
 ]
