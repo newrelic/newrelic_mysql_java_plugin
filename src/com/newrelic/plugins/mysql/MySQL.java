@@ -7,8 +7,11 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -81,10 +84,11 @@ public class MySQL {
 	 * @param SQL String of SQL Statement to execute
 	 * @return Map of key/value pairs
 	 */
-    public static Map<String,Number> runSQL(Connection c, String category, String SQL, Boolean singleRow) {
+    public static Map<String,Number> runSQL(Connection c, String category, String SQL, String type) {
     	Statement stmt = null;
     	ResultSet rs = null;
     	Map<String, Number> results = new HashMap<String,Number>();
+
 
     	try {
 	    	logger.info("Running SQL Statement " + SQL);
@@ -92,7 +96,7 @@ public class MySQL {
             rs = stmt.executeQuery(SQL);								// Execute the given SQL statement
             ResultSetMetaData md = rs.getMetaData();					// Obtain Meta data about the SQL query (column names etc)
 
-            if (singleRow) {											// If we expect a single row of results
+            if ("row".equals(type)) {									// If we expect a single row of results
             	if (rs.next()) {
             		for (int i=1; i <= md.getColumnCount();i++) {		// use column names as the "key"
             			if (validMetricValue(rs.getString(i)))
@@ -107,7 +111,7 @@ public class MySQL {
             			}
             		}
             	}
-            } else {										            // This SQL statement return a key/value pair set of rows
+            } else if ("set".equals(type)) {				            // This SQL statement return a key/value pair set of rows
 	            if (md.getColumnCount() < 2) return results;			// If there are less than 2 columns, the resultset is incomplete
 	            while (rs.next()) {
 	            	if (validMetricValue(rs.getString(2)))
@@ -115,6 +119,24 @@ public class MySQL {
 	            					translateStringToNumber(transformStringMetric(rs.getString(2))));
 	            } 														// If there are more than 2 columns, disregard additional columns
 		           
+            } else if ("special".equals(type)) {
+            	String mutex;
+            	Number value;
+	        	Map<String, Number> mutexes = new HashMap<String,Number>();
+            	if ("SHOW ENGINE INNODB MUTEX".equals(SQL)) {
+    	            while (rs.next()) {
+    	            	mutex=category + SEPARATOR + rs.getString(2).replaceAll("[&\\[\\]]", "").replaceAll("->", "_");
+    	            	value=translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf("=") +1));
+    	            	if (mutexes.containsKey(mutex)) {
+    	            		value = value.intValue() + mutexes.get(mutex).intValue();
+    	            	}
+    	            	mutexes.put(mutex, value);
+     	            } 														
+            		results.putAll(mutexes);
+            		logger.fine(mutexes.toString());
+            	} else if ("SHOW ENGINE INNODB STATUS".equals(SQL)) {
+            		results.putAll(processInnoDBStatus(rs, category));
+            	}
             }
             return results;
 		} catch (SQLException e) {
@@ -132,18 +154,27 @@ public class MySQL {
     	return results;
     }
 
-    /**
-     * Convenience method for runSQL
-     * 
- 	 * @param c Connection
-	 * @param SQL String of SQL Statement to execute
-	 * @return Map of key/value pairs
-     */
-	public static  Map<String,Number> runSQL(Connection c, String category, String SQL) {
-        return runSQL( c, category, SQL, false);
-    }
+	public static Map<String, Number> processInnoDBStatus(ResultSet rs, String category) throws SQLException {
+	   	Map<String, Number> results = new HashMap<String,Number>();
+	   	String history="history list length";
+		rs.next();
+		String status=rs.getString(3);
+		Set<String> lines = new HashSet<String>(Arrays.asList(status.toLowerCase().split("\n")));
+		logger.fine("Processing " + lines.size() + " of SHOW ENGINE INNODB STATUS");
+		for (String s: lines) {
+			if (s.startsWith(history)) {
+				results.put(category + SEPARATOR + "history_list_length", translateStringToNumber(s.substring(history.length()+1)));
+			}
+			if (s.matches(".* queries inside innodb.*")) {
+				results.put(category + SEPARATOR + "queries_inside_innodb", translateStringToNumber(s.replaceAll(" queries inside innodb.*", "")));
+				results.put(category + SEPARATOR + "queries_in_queue", translateStringToNumber(s.replaceAll(".* queries inside innodb, ", "").replaceAll(" queries in queue","")));
+			}
+		}
+		logger.info(results.toString());
+		return results;
+	}
 
-	/**
+ 	/**
 	 * This method will convert the provided string into a Number (either int or float)
 	 * 
 	 * @param String value to convert

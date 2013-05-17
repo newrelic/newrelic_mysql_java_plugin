@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.6.0";
+	private static final String version = "0.6.4";
 	public static final String COMMA = ",";
 	
 	private String name;												// Agent Name
@@ -105,8 +105,9 @@ public class MySQLAgent extends Agent {
 	 		String category = (String)iter.next();
 			@SuppressWarnings("unchecked")
 			Map<String, String> attributes = (Map<String,String>)categories.get(category);
-	 		if (metrics.contains(category + COMMA)) 					// Use a dumb search, including comma to handle overlapping categories
-	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), "row".equals(attributes.get("result"))));
+	 		if (metrics.contains(category + COMMA)) {					// Use a dumb search, including comma to handle overlapping categories
+	 			results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), attributes.get("result")));
+	 		}
 	 	}
 	 	results.putAll(newRelicMetrics(results, metrics));
  		return results;
@@ -150,12 +151,12 @@ public class MySQLAgent extends Agent {
 
 	 	try {															// Catch any number conversion problems
 	    	/* Connection management */
-		 	float threads_connected = existing.get("status/threads_running").floatValue();
+		 	float threads_connected = existing.get("status/threads_connected").floatValue();
 		 	float threads_running = existing.get("status/threads_running").floatValue();
 		 	derived.put("newrelic/connections_connected", (int)threads_connected);
 		 	derived.put("newrelic/connections_running", (int)threads_running);
 		 	derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
-//		 	derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
+		 	//derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
 		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
 
 	 	} catch (Exception e) {
@@ -174,6 +175,9 @@ public class MySQLAgent extends Agent {
 	    	derived.put("newrelic/pct_innodb_buffer_pool_hit_ratio", (innodb_read_requests / 
 	    			                                                 (innodb_read_requests + innodb_reads)) * 100.0);
 
+		 	derived.put("newrelic/innodb_fsyncs_data", existing.get("status/innodb_data_fsyncs").intValue());
+		 	derived.put("newrelic/innodb_fsyncs_os_log", existing.get("status/innodb_os_log_fsyncs").intValue());
+
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating InnoDB metrics " + e.getMessage());	 		
 	 	}
@@ -183,12 +187,15 @@ public class MySQLAgent extends Agent {
 	    	/* Query Cache */
 		 	float qc_hits = existing.get("status/qcache_hits").floatValue();
 		 	float reads = existing.get("status/com_select").floatValue();
+		 	float free = existing.get("status/qcache_free_blocks").floatValue();
+		 	float total = existing.get("status/qcache_total_blocks").floatValue();
 
 		 	derived.put("newrelic/query_cache_hits", (int)qc_hits);
 		 	derived.put("newrelic/query_cache_misses", existing.get("status/qcache_inserts").intValue());
 		 	derived.put("newrelic/query_cache_not_cached", existing.get("status/qcache_not_cached").intValue());	
 
-		 	derived.put("newrelic/pct_query_cache_utilization", (qc_hits / (qc_hits + reads))* 100.0); 
+		 	derived.put("newrelic/pct_query_cache_hit_utilization", (qc_hits / (qc_hits + reads))* 100.0); 
+		 	derived.put("newrelic/pct_query_cache_memory_in_use", 100 - ((free/total)* 100.0)); 
 
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating Query Cache Metrics " + e.getMessage());	 		
@@ -198,7 +205,7 @@ public class MySQLAgent extends Agent {
 		 	float tmp_tables = existing.get("status/created_tmp_tables").floatValue();
 		 	float tmp_tables_disk = existing.get("status/created_tmp_disk_tables").floatValue();
 
-		 	derived.put("newrelic/pct_tmp_tables_to_disk", (tmp_tables_disk/tmp_tables)* 100.0); 
+		 	derived.put("newrelic/pct_tmp_tables_written_to_disk", (tmp_tables_disk/tmp_tables)* 100.0); 
 
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating Temporary Table metrics " + e.getMessage());	 		
@@ -241,7 +248,7 @@ public class MySQLAgent extends Agent {
 	 		String key = (String)iter.next().toLowerCase();
 	 		Number val = results.get(key);
 	 		MetricMeta md = getMetricMeta(key);
-	 		if (md != null) {
+	 		if (md != null) {											// Metric Meta data exists (from metric.category.json)
 		 		logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
 		 		count++;
 	
@@ -255,11 +262,11 @@ public class MySQLAgent extends Agent {
 	 				}
 		 		}
 	 		} else { // md != null
-	 			if (firstReport)
+	 			if (firstReport)											// Provide some feedback of available metrics for future reporting 
 	 				logger.warning("Not reporting identified metric " + key); 			
 	 		}
 	 	}
-	 	logger.info("[" + name + "] Reported to New Relic " + count + " metrics");
+	 	logger.info("[" + name + "/" + version + "] Reported to New Relic " + count + " metrics");
 	}
 
 	/**
@@ -276,7 +283,7 @@ public class MySQLAgent extends Agent {
 
 		addMetricMeta("newrelic/connections_connected", new MetricMeta(false, "Connections"));
 		addMetricMeta("newrelic/connections_running", new MetricMeta(false, "Connections"));
-		addMetricMeta("newrelic/connections_maximum", new MetricMeta(false, "Connections"));
+		addMetricMeta("newrelic/connections_cached", new MetricMeta(false, "Connections"));
 	
 		addMetricMeta("newrelic/innodb_bp_pages_created", new MetricMeta(true, "Pages/Second"));
 		addMetricMeta("newrelic/innodb_bp_pages_read", new MetricMeta(true, "Pages/Second"));
@@ -291,10 +298,17 @@ public class MySQLAgent extends Agent {
 
 		addMetricMeta("newrelic/pct_connnection_utilization", new MetricMeta(false, "Percent"));
 		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio", new MetricMeta(false, "Percent"));
-		addMetricMeta("newrelic/pct_query_cache_utilization", new MetricMeta(false, "Percent"));
-		addMetricMeta("newrelic/pct_tmp_tables_to_disk", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_query_cache_hit_utilization", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_query_cache_memory_in_use", new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_tmp_tables_written_to_disk", new MetricMeta(false, "Percent"));
+
+		addMetricMeta("newrelic/innodb_fsyncs_data",   new MetricMeta(true, "Fsyncs/Second"));
+		addMetricMeta("newrelic/innodb_fsyncs_os_log", new MetricMeta(true, "Fsyncs/Second"));
 
 	 	/* Define improved metric values for certain general metrics */
+		addMetricMeta("status/aborted_clients", new MetricMeta(true, "Connections/Second"));
+		addMetricMeta("status/aborted_connects", new MetricMeta(true, "Connections/Second"));
+		addMetricMeta("status/bytes_sent", new MetricMeta(true, "Bytes/Second"));
 		addMetricMeta("status/bytes_received", new MetricMeta(true, "Bytes/Second"));
 		addMetricMeta("status/bytes_sent", new MetricMeta(true, "Bytes/Second"));
 		addMetricMeta("status/com_select", new MetricMeta(true, "Selects/Second"));
@@ -303,18 +317,38 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("status/com_update", new MetricMeta(true, "Ops/Second"));
 		addMetricMeta("status/com_delete", new MetricMeta(true, "Ops/Second"));
 		addMetricMeta("status/com_replace", new MetricMeta(true, "Ops/Second"));
-	
+
+		addMetricMeta("status/slow_queries", new MetricMeta(true, "Queries/Second"));
+		addMetricMeta("status/created_tmp_tables", new MetricMeta(true, "Queries/Second"));
+		addMetricMeta("status/created_tmp_disk_tables", new MetricMeta(true, "Queries/Second"));
+
 		addMetricMeta("status/innodb_buffer_pool_pages_data", new MetricMeta(false, "Pages"));
 		addMetricMeta("status/innodb_buffer_pool_pages_dirty", new MetricMeta(false, "Pages"));
-		addMetricMeta("status/innodb_buffer_pool_pages_flushed", new MetricMeta(false, "Pages"));
+		addMetricMeta("status/innodb_buffer_pool_pages_flushed", new MetricMeta(true, "Pages/Second"));
 		addMetricMeta("status/innodb_buffer_pool_pages_free", new MetricMeta(false, "Pages"));
 		addMetricMeta("status/innodb_buffer_pool_pages_misc", new MetricMeta(false, "Pages"));
 		addMetricMeta("status/innodb_buffer_pool_pages_total", new MetricMeta(false, "Pages"));
 
+		addMetricMeta("status/innodb_data_fsyncs", new MetricMeta(true, "Fsyncs/Second"));
+		addMetricMeta("status/innodb_os_log_fsyncs", new MetricMeta(true, "Fsyncs/Second"));
+
 		addMetricMeta("status/innodb_os_log_written", new MetricMeta(true, "Bytes/Second"));
 
+		/* Query Cache Units */
+		addMetricMeta("status/qcache_free_blocks",      new MetricMeta(false, "Blocks"));
+		addMetricMeta("status/qcache_free_memory",      new MetricMeta(false, "Bytes"));
+		addMetricMeta("status/qcache_hits",             new MetricMeta(true,  "Queries/Second"));
+		addMetricMeta("status/qcache_inserts",          new MetricMeta(true,  "Queries/Second"));
+		addMetricMeta("status/qcache_lowmem_prunes",    new MetricMeta(true,  "Queries/Second"));
+		addMetricMeta("status/qcache_not_cached",       new MetricMeta(true,  "Queries/Second"));
+		addMetricMeta("status/qcache_queries_in_cache", new MetricMeta(false, "Queries"));
+		addMetricMeta("status/qcache_total_blocks",     new MetricMeta(false, "Blocks"));
 		
-	 	Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
+		addMetricMeta("innodb_status/history_list_length",   new MetricMeta(false, "Pages"));
+		addMetricMeta("innodb_status/queries_inside_innodb", new MetricMeta(false, "Queries"));
+		addMetricMeta("innodb_status/queries_in_queue",      new MetricMeta(false, "Queries"));
+
+		Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
 	 	Iterator<String> iter = categories.keySet().iterator();	
 	 	while (iter.hasNext()) {
 	 		String category = (String)iter.next();
@@ -325,7 +359,8 @@ public class MySQLAgent extends Agent {
 				Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
 				for (String s: metrics) {
 					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
-				}
+				}		addMetricMeta("	status/innodb_data_fsyncs", new MetricMeta(true, "Fsyncs/Second"));
+
 			}
 			String counterMetrics = attributes.get("counter_metrics");
 			if (counterMetrics != null) {
@@ -359,6 +394,9 @@ public class MySQLAgent extends Agent {
 	 * @return MetridMeta  Structure of information about the metric
 	 */
 	private MetricMeta getMetricMeta(String key) {
+		if (key.startsWith("innodb_mutex/")) {
+			addMetricMeta(key, new MetricMeta(true, "Operations/Second"));
+		}
  		return (MetricMeta)metricsMeta.get(key.toLowerCase());				// Look for existing meta data on metric
 	}
 

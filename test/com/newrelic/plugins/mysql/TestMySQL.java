@@ -2,7 +2,9 @@ package com.newrelic.plugins.mysql;
 
 import java.math.BigInteger;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -73,7 +75,7 @@ public class TestMySQL {
 	public void runSQLSingleStatusValid() {
 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'", "set");
 		assertEquals(1,results.size());	
 		assertEquals(0,results.get("status/com_xa_rollback").intValue());		// A status likely to never have a value
 	}
@@ -82,7 +84,7 @@ public class TestMySQL {
 	public void runSQLSingleStatusValue() {
 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'", "set");
 		assertEquals(1,results.size());	
 		assertTrue(results.get("status/uptime").intValue() > 0);		// A status that will always be > 0
 	}
@@ -91,7 +93,7 @@ public class TestMySQL {
 	public void runSQLSingleStatusInvalid() {
 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'", "set");
 		assertEquals(0,results.size());									// This is removed because value is a string
 	}
 	
@@ -100,7 +102,7 @@ public class TestMySQL {
 	public void runSQLSingleStatusTranslated() {
 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
-		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'");
+		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'", "set");
 		assertEquals(1,results.size());	
 		assertEquals(0,results.get("status/compression").intValue());		//Translated from OFF
 	}
@@ -134,6 +136,24 @@ public class TestMySQL {
 		assertFalse(val.matches("\\d*\\.\\d*"));
 	}
 
+
+	@Test
+	public void runSHOWENGINEINNODBSTATUS() throws SQLException {
+		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		assertNotNull(c);
+		Statement stmt = c.createStatement();
+        String SQL = "SHOW ENGINE INNODB STATUS";
+        Map<String, Number> results = MySQL.processInnoDBStatus(stmt.executeQuery(SQL), "innodb_status");
+		assertEquals(3,results.size());	
+//		System.out.println(results.toString());
+		assertNotNull(results.get("innodb_status/history_list_length"));
+		
+		String s = "0 queries inside innodb, 0 queries in queue";
+		assertTrue(s.matches(".*queries inside innodb.*"));
+
+		s = "&dict->stats[i]";
+		assertEquals("dict_statsi",s.replaceAll("[&\\[\\]]", "").replaceAll("->", "_"));
+	}
 
 
 }
