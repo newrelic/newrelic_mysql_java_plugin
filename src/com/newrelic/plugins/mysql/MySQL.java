@@ -46,7 +46,7 @@ public class MySQL {
 	 private void getNewConnection(String host, String user, String passwd, String properties) {
 		String dbURL="jdbc:mysql://" + host + "/" + properties;
 			 
-		logger.info("Getting new MySQL Connection " + dbURL + " " + user);
+		logger.info("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
     		conn = DriverManager.getConnection(dbURL, user, passwd);
@@ -119,21 +119,9 @@ public class MySQL {
 	            					translateStringToNumber(transformStringMetric(rs.getString(2))));
 	            } 														// If there are more than 2 columns, disregard additional columns
 		           
-            } else if ("special".equals(type)) {
-            	String mutex;
-            	Number value;
-	        	Map<String, Number> mutexes = new HashMap<String,Number>();
-            	if ("SHOW ENGINE INNODB MUTEX".equals(SQL)) {
-    	            while (rs.next()) {
-    	            	mutex=category + SEPARATOR + rs.getString(2).replaceAll("[&\\[\\]]", "").replaceAll("->", "_");
-    	            	value=translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf("=") +1));
-    	            	if (mutexes.containsKey(mutex)) {
-    	            		value = value.intValue() + mutexes.get(mutex).intValue();
-    	            	}
-    	            	mutexes.put(mutex, value);
-     	            } 														
-            		results.putAll(mutexes);
-            		logger.fine(mutexes.toString());
+            } else if ("special".equals(type)) {						// These are per case bases SQL type commands with special needs
+             	if ("SHOW ENGINE INNODB MUTEX".equals(SQL)) {
+             		results.putAll(processInnodbMutex(rs, category)); 														
             	} else if ("SHOW ENGINE INNODB STATUS".equals(SQL)) {
             		results.putAll(processInnoDBStatus(rs, category));
             	}
@@ -154,22 +142,76 @@ public class MySQL {
     	return results;
     }
 
+    /**
+     * This method is special processing for the the SHOW ENGINE INNODB MUTEX output including
+     * - Discard first column
+     * - String conversion of names
+     * - extraction of value from column
+     * - Aggregation of repeating name rows
+     * 
+     * 
+     * @param ResultSet rs 
+     * @param String category
+     * @return Map of metrics collated
+     * @throws SQLException
+     */
+	private static Map<String, Number> processInnodbMutex(ResultSet rs, String category) throws SQLException {
+		String mutex;
+		Number value;
+    	Map<String, Number> mutexes = new HashMap<String,Number>();
+
+		while (rs.next()) {
+			mutex=category + SEPARATOR + rs.getString(2).replaceAll("[&\\[\\]]", "").replaceAll("->", "_");
+			value=translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf("=") +1));
+			if (mutexes.containsKey(mutex)) {
+				value = value.intValue() + mutexes.get(mutex).intValue();
+			}
+			mutexes.put(mutex, value);
+		}
+		logger.fine(mutexes.toString());
+		 
+		return mutexes;
+	}
+
+	/**
+	 * This method is special processing for the SHOW ENGINE INNODB STATUS output as this is one blob of text
+	 * 
+	 * @param ResultSet rs
+	 * @param String category
+	 * @return Map of metrics collected
+	 * @throws SQLException
+	 */
 	public static Map<String, Number> processInnoDBStatus(ResultSet rs, String category) throws SQLException {
 	   	Map<String, Number> results = new HashMap<String,Number>();
 	   	String history="history list length";
-		rs.next();
+	   	String LSN = "log sequence number";
+	   	String checkpoint = "last checkpoint at ";
+	   	Number log_sequence_number = 0, last_checkpoint = 0;
+
+	   	if (!rs.next()) return results;
 		String status=rs.getString(3);
 		Set<String> lines = new HashSet<String>(Arrays.asList(status.toLowerCase().split("\n")));
 		logger.fine("Processing " + lines.size() + " of SHOW ENGINE INNODB STATUS");
+
 		for (String s: lines) {
 			if (s.startsWith(history)) {
 				results.put(category + SEPARATOR + "history_list_length", translateStringToNumber(s.substring(history.length()+1)));
+			}
+			if (s.startsWith(LSN)) {
+				log_sequence_number=translateStringToNumber(s.substring(LSN.length()+1));
+				results.put(category + SEPARATOR + "log_sequence_number", log_sequence_number);
+			}
+			if (s.startsWith(checkpoint)) {
+				last_checkpoint = translateStringToNumber(s.substring(checkpoint.length()+1));
+				results.put(category + SEPARATOR + "last_checkpoint", last_checkpoint);
 			}
 			if (s.matches(".* queries inside innodb.*")) {
 				results.put(category + SEPARATOR + "queries_inside_innodb", translateStringToNumber(s.replaceAll(" queries inside innodb.*", "")));
 				results.put(category + SEPARATOR + "queries_in_queue", translateStringToNumber(s.replaceAll(".* queries inside innodb, ", "").replaceAll(" queries in queue","")));
 			}
 		}
+		results.put(category + SEPARATOR + "checkpoint_age", log_sequence_number.intValue() - last_checkpoint.intValue());
+		
 		logger.info(results.toString());
 		return results;
 	}
@@ -182,10 +224,11 @@ public class MySQL {
 	 */
 	public static Number translateStringToNumber(String val) {
 		try {
-			 if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
- 				return (float)Float.parseFloat(val);
+			val = val.replaceAll(" ", "");									// Strip any spaces
+			if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
+				return (float)Float.parseFloat(val);
 			 } else {
- 				return new BigInteger(val);
+				return new BigInteger(val);
 			 }
 		} catch (Exception e) {
  			logger.warning("Unable to parse int/float number from value " + val);
