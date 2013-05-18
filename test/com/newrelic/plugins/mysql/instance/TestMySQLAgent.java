@@ -7,8 +7,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.newrelic.plugins.mysql.MySQL;
-
 public class TestMySQLAgent {
 
 	@Test
@@ -28,7 +26,7 @@ public class TestMySQLAgent {
 
 		String metrics="status,newrelic";
 		MySQLAgent agent = new MySQLAgent("test",
-										  MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES,
+										  MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
 										  metrics, new HashMap<String,Object>());
 		
 		Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results,metrics);

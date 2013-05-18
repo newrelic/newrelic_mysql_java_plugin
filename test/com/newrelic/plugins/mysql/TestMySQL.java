@@ -11,6 +11,8 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.newrelic.plugins.mysql.instance.MySQLAgent;
+
 /**
  * This class performs test cases on the MySQL class
  * 
@@ -26,14 +28,14 @@ public class TestMySQL {
     
  	@Test
 	public void verifyValidConnection() {
- 		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+ 		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 	}
 
  	/*
 	@Test
 	public void verifyInvalidConnection() {
-		Connection c = MySQL.getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD + "X");
+		Connection c = MySQL.getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD + "X");
 		assertNull(c);
 	}
  	 */
@@ -72,7 +74,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusValid() {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'", "set");
 		assertEquals(1,results.size());	
@@ -81,7 +83,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusValue() {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'", "set");
 		assertEquals(1,results.size());	
@@ -90,7 +92,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusInvalid() {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'", "set");
 		assertEquals(0,results.size());									// This is removed because value is a string
@@ -99,7 +101,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSQLSingleStatusTranslated() {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'", "set");
 		assertEquals(1,results.size());	
@@ -138,7 +140,7 @@ public class TestMySQL {
 
 	@Test
 	public void runSHOWENGINEINNODBSTATUS() throws SQLException {
-		Connection c = new MySQL().getConnection(MySQL.AGENT_DEFAULT_HOST, MySQL.AGENT_DEFAULT_USER, MySQL.AGENT_DEFAULT_PASSWD, MySQL.AGENT_DEFAULT_PROPERTIES);
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNotNull(c);
 		Statement stmt = c.createStatement();
         String SQL = "SHOW ENGINE INNODB STATUS";
