@@ -25,9 +25,19 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.6.8-alpha";
-	public static final String COMMA = ",";
+	private static final String version = "0.8.0-beta";
+
+	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
+	public static final String AGENT_DEFAULT_USER = "newrelic";
+	public static final String AGENT_DEFAULT_PASSWD = "f63c225f4abe9e13";
+	public static final String AGENT_DEFAULT_PROPERTIES = "";
+	public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
+
+	public static final String AGENT_CONFIG_FILE = "mysql.instance.json";
+	public static final String CATEGORY_CONFIG_FILE = "metric.category.json";
 	
+	public static final String COMMA = ",";
+
 	private String name;												// Agent Name
 
 	private String host;												// MySQL Connection parameters
@@ -316,7 +326,7 @@ public class MySQLAgent extends Agent {
 				Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
 				for (String s: metrics) {
 					addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
-				}		addMetricMeta("	status/innodb_data_fsyncs", new MetricMeta(true, "Fsyncs/Second"));
+				}
 
 			}
 			String counterMetrics = attributes.get("counter_metrics");

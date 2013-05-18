@@ -23,11 +23,6 @@ import java.util.logging.Logger;
  */
 public class MySQL {
 
-	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
-	public static final String AGENT_DEFAULT_USER = "newrelic";
-	public static final String AGENT_DEFAULT_PASSWD = "f63c225f4abe9e13";
-	public static final String AGENT_DEFAULT_PROPERTIES = "";
-	public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
 	public static final String SEPARATOR = "/";
 
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
@@ -164,6 +159,7 @@ public class MySQL {
 			mutex=category + SEPARATOR + rs.getString(2).replaceAll("[&\\[\\]]", "").replaceAll("->", "_");
 			value=translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf("=") +1));
 			if (mutexes.containsKey(mutex)) {
+				logger.fine("appending " + value);
 				value = value.intValue() + mutexes.get(mutex).intValue();
 			}
 			mutexes.put(mutex, value);
@@ -212,7 +208,7 @@ public class MySQL {
 		}
 		results.put(category + SEPARATOR + "checkpoint_age", log_sequence_number.intValue() - last_checkpoint.intValue());
 		
-		logger.info(results.toString());
+		logger.fine(results.toString());
 		return results;
 	}
 

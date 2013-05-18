@@ -2,7 +2,6 @@ package com.newrelic.plugins.mysql.instance;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.json.simple.JSONArray;
@@ -12,7 +11,6 @@ import com.newrelic.metrics.publish.Agent;
 import com.newrelic.metrics.publish.AgentFactory;
 import com.newrelic.metrics.publish.binding.Context;
 import com.newrelic.metrics.publish.configuration.ConfigurationException;
-import com.newrelic.plugins.mysql.MySQL;
 
 /**
  * This class produces the necessary Agents to perform
@@ -26,13 +24,10 @@ public class MySQLAgentFactory extends AgentFactory {
 	 * Construct an Agent Factory based on the default properties file
 	 */
 	public MySQLAgentFactory() {
-		super("mysql.instance.json");
+		super(MySQLAgent.AGENT_CONFIG_FILE);
 	}
 	
-	/**	private JSONArray readJSONFile(String string) {
-		super()
-	}
-
+	/**	
 	 * Configure an agent based on an entry in the properties file.
 	 * There may be multiple agents per Plugin
 	 * 
@@ -45,16 +40,16 @@ public class MySQLAgentFactory extends AgentFactory {
 		String passwd = (String) properties.get("passwd");
 		String conn_properties = (String) properties.get("properties");
 		String metrics = (String) properties.get("metrics");
+
 		/**
 		 * Use pre-defined defaults to simplify configuration
 		 */
-		if (host == null || "".equals(host)) host = MySQL.AGENT_DEFAULT_HOST;
-		if (user == null || "".equals(user)) user = MySQL.AGENT_DEFAULT_USER;
-		if (passwd == null) passwd = MySQL.AGENT_DEFAULT_PASSWD;
-		if (conn_properties == null || "".equals(conn_properties)) conn_properties = MySQL.AGENT_DEFAULT_PROPERTIES;
-		if (metrics == null || "".equals(metrics)) metrics = MySQL.AGENT_DEFAULT_METRICS;
+		if (host == null || "".equals(host)) host = MySQLAgent.AGENT_DEFAULT_HOST;
+		if (user == null || "".equals(user)) user = MySQLAgent.AGENT_DEFAULT_USER;
+		if (passwd == null) passwd = MySQLAgent.AGENT_DEFAULT_PASSWD;
+		if (conn_properties == null || "".equals(conn_properties)) conn_properties = MySQLAgent.AGENT_DEFAULT_PROPERTIES;
+		if (metrics == null || "".equals(metrics)) metrics = MySQLAgent.AGENT_DEFAULT_METRICS;
      
-		Context.getLogger().setLevel(Level.ALL);
 		return new MySQLAgent(name,host,user,passwd, conn_properties, metrics, readCategoryConfiguration());
 	}
 	
@@ -69,7 +64,7 @@ public class MySQLAgentFactory extends AgentFactory {
 		Map<String, Object> metricCategories = new HashMap<String, Object>();
 
 		JSONArray json;
-		String filename = "metric.category.json";
+		String filename = MySQLAgent.CATEGORY_CONFIG_FILE;
 		try {
 			json = readJSONFile(filename);
 			for (int i = 0; i < json.size(); i++) {
