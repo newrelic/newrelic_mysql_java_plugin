@@ -6,11 +6,11 @@
 	<property name="distdir" location="dist"/>
 	<property name="confdir" location="config"/>
 	<property name="scriptdir" location="scripts"/>
-	<property name="version" value="beta"/>
+	<property name="version" value="0.8.1-beta"/>
     <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
     <property name="tarfile" value="${distdir}/newrelic_mysql_plugin-${version}.tar.gz"/>
 
-    <property name="platform-metrics-java" value="${libdir}/metrics_publish-beta.jar"/>
+    <property name="platform-metrics-java" value="${libdir}/metrics_publish-0.2.1.jar"/>
     <property name="mysql-connector" value="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
 
     <path id="classpath">
@@ -44,7 +44,7 @@
     	<tstamp/>
     	<jar destfile="${jarfile}">
             <manifest>
-            	<attribute name="Specification-Title" value="Platform MySQL Plugin"/>
+            	<attribute name="Specification-Title" value="MySQL Plugin"/>
             	<attribute name="Specification-Vendor" value="New Relic, Inc."/>
             	<attribute name="Implementation-Vendor" value="New Relic, Inc."/>                
             	<attribute name="Built-Date" value="${TODAY}"/>
@@ -55,6 +55,7 @@
     	    </manifest>
             <fileset dir="${builddir}"/>
             <zipfileset src="${platform-metrics-java}"/> 
+            <zipfileset src="${mysql-connector}"/> 
        </jar>
     </target>
 
