@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.8.1-beta";
+	private static final String version = "0.8.2-beta";
 
 	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
 	public static final String AGENT_DEFAULT_USER = "newrelic";
