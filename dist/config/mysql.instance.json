@@ -1,0 +1,9 @@
+[
+    {
+		"name" : "Localhost",
+		"host" : "localhost",
+		"metrics" : "status,newrelic",
+		"user" : "USER_NAME_HERE",
+		"passwd" : "USER_PASSWD_HERE"
+    },
+]
