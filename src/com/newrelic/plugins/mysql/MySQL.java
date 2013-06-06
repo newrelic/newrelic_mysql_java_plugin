@@ -227,7 +227,7 @@ public class MySQL {
 				return new BigInteger(val);
 			 }
 		} catch (Exception e) {
- 			logger.info("Unable to parse int/float number from value " + val);
+ 			logger.severe("Unable to parse int/float number from value " + val);
  		}
 		return 0;
 	}
