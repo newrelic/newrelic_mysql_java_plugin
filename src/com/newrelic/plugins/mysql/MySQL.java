@@ -41,7 +41,7 @@ public class MySQL {
 	 private void getNewConnection(String host, String user, String passwd, String properties) {
 		String dbURL="jdbc:mysql://" + host + "/" + properties;
 			 
-		logger.info("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
+		logger.fine("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
 		try {
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
     		conn = DriverManager.getConnection(dbURL, user, passwd);
@@ -86,7 +86,7 @@ public class MySQL {
 
 
     	try {
-	    	logger.info("Running SQL Statement " + SQL);
+	    	logger.fine("Running SQL Statement " + SQL);
 			stmt = c.createStatement();
             rs = stmt.executeQuery(SQL);								// Execute the given SQL statement
             ResultSetMetaData md = rs.getMetaData();					// Obtain Meta data about the SQL query (column names etc)
@@ -227,7 +227,7 @@ public class MySQL {
 				return new BigInteger(val);
 			 }
 		} catch (Exception e) {
- 			logger.warning("Unable to parse int/float number from value " + val);
+ 			logger.info("Unable to parse int/float number from value " + val);
  		}
 		return 0;
 	}

@@ -92,7 +92,7 @@ public class MySQLAgent extends Agent {
 		Connection c = m.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
 		if (c == null) return;											// Unable to continue without a valid database connection
 
-	 	logger.info("Gathering MySQL metrics. " + getAgentInfo());
+	 	logger.fine("Gathering MySQL metrics. " + getAgentInfo());
 		Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics 
 		reportMetrics(results);											// Report Metrics to New Relic
 		firstReport = false;
@@ -276,7 +276,7 @@ public class MySQLAgent extends Agent {
 	 */
 	public void reportMetrics(Map<String,Number> results) { 
 		int count = 0;
-	 	logger.info("Collected " + results.size() + " MySQL metrics. " + getAgentInfo());
+	 	logger.fine("Collected " + results.size() + " MySQL metrics. " + getAgentInfo());
 	 	logger.finest(results.toString());
 
 	 	Iterator<String> iter = results.keySet().iterator();			
@@ -299,10 +299,10 @@ public class MySQLAgent extends Agent {
 		 		}
 	 		} else { // md != null
 	 			if (firstReport)											// Provide some feedback of available metrics for future reporting 
-	 				logger.warning("Not reporting identified metric " + key); 			
+	 				logger.fine("Not reporting identified metric " + key); 			
 	 		}
 	 	}
-	 	logger.info("Reported to New Relic " + count + " metrics. " + getAgentInfo());
+	 	logger.fine("Reported to New Relic " + count + " metrics. " + getAgentInfo());
 	}
 
 	private String getAgentInfo() {
