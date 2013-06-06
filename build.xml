@@ -6,11 +6,11 @@
 	<property name="distdir" location="dist"/>
 	<property name="confdir" location="config"/>
 	<property name="scriptdir" location="scripts"/>
-	<property name="version" value="0.8.2-beta"/>
+	<property name="version" value="0.8.3-beta"/>
     <property name="jarfile" value="${distdir}/newrelic_mysql_plugin-${version}.jar"/>
     <property name="tarfile" value="${distdir}/newrelic_mysql_plugin-${version}.tar.gz"/>
 
-    <property name="platform-metrics-java" value="${libdir}/metrics_publish-0.2.2.jar"/>
+    <property name="platform-metrics-java" value="${libdir}/metrics_publish-0.2.3.jar"/>
     <property name="mysql-connector" value="${libdir}/mysql-connector-java-5.1.24-bin.jar"/>
 
     <path id="classpath">
@@ -65,6 +65,7 @@
           <fileset dir="${confdir}" includes="**/*sample*" />
        </copy>
        <copy file="${confdir}/metric.category.json" todir="${distdir}/config" />
+       <copy file="${confdir}/logging.properties" todir="${distdir}/config" />
        <copy file="README.TXT" todir="${distdir}" />
        <copy file="MYSQL.TXT" todir="${distdir}" />
        <copy file="CATEGORIES.TXT" todir="${distdir}" />
