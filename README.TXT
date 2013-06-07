@@ -68,12 +68,11 @@ More extensive instructions are available below in the Production Setup section.
 Running the Agent
 -----------------
 
- $ chmod +x run_mysql_plugin.sh
- $ ./run_mysql_plugin.sh
+ $ java -jar newrelic_mysql_plugin*.jar
 
 To run the plugin in the background.
 
- $ nohup ./run_mysql_plugin.sh &
+ $ nohup java -jar newrelic_mysql_plugin*.jar &
 
 At present there are no init.d scripts to start the New Relic MySQL plugin at system startup.
 
