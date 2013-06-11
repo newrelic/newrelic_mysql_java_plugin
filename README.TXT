@@ -40,6 +40,7 @@ New Relic. The following steps configure this agent for your specific environmen
 Specify your license key in the necessary properties file.
 Your license key can be found under Account Settings at https://rpm.newrelic.com
 
+ $ cp config/template_newrelic.properties config/newrelic.properties
  # Edit config/newrelic.properties and enter your license key.
 
 
@@ -48,6 +49,7 @@ Your license key can be found under Account Settings at https://rpm.newrelic.com
 Each running MySQL plugin agent requires a JSON configuration file defining the access to 
 the MySQL instance(s). An example file is provided in the config directory.
 
+ $ cp config/template_mysql.instance.json config/mysql.instance.json
  # Edit config/mysql.instance.json
 
 If using your localhost MySQL instance, add your user name and passwd as well as a meaningful name for the MySQL instance. 
