@@ -17,6 +17,12 @@ import org.junit.Test;
 
 import com.newrelic.metrics.publish.configuration.ConfigurationException;
 
+/**
+ * All enabled tests pass on version 5.5 of MySQL.
+ *
+ * @author Ronald Bradford me@ronaldbradford.com
+ *
+ */
 public class TestMySQLAgentFactory {
 
 	@SuppressWarnings("unchecked")

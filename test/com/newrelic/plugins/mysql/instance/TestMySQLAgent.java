@@ -9,6 +9,12 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * All enabled tests pass on version 5.5 of MySQL.
+ *
+ * @author Ronald Bradford me@ronaldbradford.com
+ *
+ */
 public class TestMySQLAgent {
 
     @Ignore

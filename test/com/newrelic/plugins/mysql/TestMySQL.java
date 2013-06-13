@@ -18,7 +18,8 @@ import org.junit.Test;
 import com.newrelic.plugins.mysql.instance.MySQLAgent;
 
 /**
- * This class performs test cases on the MySQL class
+ * This class performs test cases on the MySQL class.
+ * All enabled tests pass on version 5.5 of MySQL.
  * 
  * @author Ronald Bradford me@ronaldbradford.com 
  * 
