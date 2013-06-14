@@ -7,6 +7,7 @@ import org.junit.Test;
 
 /**
  * This class performs test cases on the MySQL class
+ * All enabled tests pass on version 5.5 of MySQL.
  * 
  * @author Ronald Bradford me@ronaldbradford.com 
  * 
