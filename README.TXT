@@ -103,4 +103,4 @@ Adjust your instance information with name, host, and username/passwd.
 Source Code
 -----------
 
-This plugin can be found at https://github.com/newrelic-platform/newrelic_mysql_extension
+This plugin can be found at https://github.com/newrelic-platform/newrelic_mysql_plugin
