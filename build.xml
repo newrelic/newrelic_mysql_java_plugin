@@ -41,7 +41,7 @@
         <!--  Compile the java code  -->
         <echo>Building project...</echo>
         <mkdir dir="${build.classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${build.classes.dir}">
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" target="1.6" source="1.6">
             <classpath refid="classpath"/>
         </javac>
         <echo>Done.</echo>
