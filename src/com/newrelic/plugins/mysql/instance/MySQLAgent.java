@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "0.8.3-beta";
+	private static final String version = "0.8.4-beta";
 
 	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
 	public static final String AGENT_DEFAULT_USER = "newrelic";
@@ -289,7 +289,7 @@ public class MySQLAgent extends Agent {
 		 		count++;
 	
 		 		if (md.isCounter()) {										// Metric is a counter
-						reportMetric(key , md.getUnit(), md.getCounter().process(val).floatValue());
+						reportMetric(key , md.getUnit(), md.getCounter().process(val));
 				} else {													// Metric is a fixed Number
 					if (java.lang.Float.class.equals(results.get(key).getClass())) {	
 						reportMetric(key, md.getUnit(), val.floatValue()); 	// We are working with a float value
