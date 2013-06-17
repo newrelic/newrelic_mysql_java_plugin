@@ -30,4 +30,4 @@ The JSON attributes are:
 * counter_metrics - A CSV list of metrics that are per second values
 
 Currently, the New Relic Platform does not allow for customized dashboards per user.
-In future this feature will enable custom categories to be fully utilized.
+In the future this feature will enable custom categories to be fully utilized.
