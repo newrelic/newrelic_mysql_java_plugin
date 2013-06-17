@@ -102,7 +102,7 @@ Adjust your instance information with name, host, and username/passwd.
 
 3. Metric Categories
 
-The MySQL plugin uses an extensible architecture that allows you to define new MySQL metrics beyond the default ones.
+The MySQL plugin uses an extensible architecture that allows you to define new MySQL metrics beyond the provided defaults.
 See the CATEGORIES.TXT file for additional information about available metrics.
 
 
