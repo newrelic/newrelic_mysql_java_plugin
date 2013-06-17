@@ -52,7 +52,7 @@ the MySQL instance(s). An example file is provided in the config directory.
  $ cp config/template_mysql.instance.json config/mysql.instance.json
  # Edit config/mysql.instance.json
 
-If using your localhost MySQL instance, add your user name and passwd as well as a meaningful name for the MySQL instance. 
+If using your localhost MySQL instance, add your user name and password as well as a meaningful name for the MySQL instance.
 Set the value for the "name" attribute to match your MySQL databases purpose, e.g. "Production Master". 
 More extensive instructions are available below in the Production Setup section.
 
@@ -98,6 +98,12 @@ MYSQL.TXT for more information.
  # Edit config/mysql.instance.json
  
 Adjust your instance information with name, host, and username/passwd. 
+
+
+3. Metric Categories
+
+The MySQL plugin uses an extensible architecture that allows you to define new MySQL metrics beyond the provided defaults.
+See the CATEGORIES.TXT file for additional information about available metrics.
 
 
 Source Code
