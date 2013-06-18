@@ -21,6 +21,12 @@ The following instructions can be used on Linux systems.
     $ mkdir /path/to/newrelic-plugin
     $ cd /path/to/newrelic-plugin
     $ tar xfz newrelic_mysql_plugin*.tar.gz
+    
+## Create MySQL User if necessary
+The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL file.
+`$ mysql -uroot -p < mysql_user.sql`
+
+*You can choose to use a different MySQL user name and password. see MYSQL.TXT for more info.*
 
 ## Configuring your Agent Environment
 The New Relic plugin for MySQL runs an agent process to collect and report MySQL metrics to New Relic. Configure your New Relic license and MySQL databases.
@@ -58,19 +64,6 @@ To run the plugin in from the command line and detach the process so it will run
 `$ nohup java -jar newrelic_mysql_plugin*.jar &`
 
 *Note: At present there are no init.d scripts to start the New Relic MySQL plugin at system startup.*
-
-## Production Setup
-
-### Create MySQL User
-The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL file.
-`$ mysql -uroot -p < mysql_user.sql`
-
-*You can choose to use a different MySQL user name and password. see MYSQL.TXT for more info.*
-
-### MySQL Properties
-`# Edit config/mysql.instance.json`
-
-Adjust your instance information with name, host, and username/passwd.
 
 ## Keep this process running
 You can use services like these to manage this process.
