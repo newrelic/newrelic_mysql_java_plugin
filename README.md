@@ -40,15 +40,15 @@ Each running MySQL plugin agent requires a JSON configuration file defining the 
 
 If using your localhost MySQL instance, add your user name and password as well as a meaningful name which will appear in the New Relic user interface for the MySQL instance. Set the value for the "name" attribute to match your MySQL databases purpose, e.g. "Production Master". 
 
-  [
-	    {
-	        "name" : "Localhost",
-	        "host" : "localhost",
-	        "metrics" : "status,newrelic",
-	        "user" : "USER_NAME_HERE",
-	        "passwd" : "USER_PASSWD_HERE"
-	    },
-	]
+    [
+      {
+        "name" : "Localhost",
+        "host" : "localhost",
+        "metrics" : "status,newrelic",
+        "user" : "USER_NAME_HERE",
+        "passwd" : "USER_PASSWD_HERE"
+       },
+    ]
 
 ## Running the Agent
 To run the plugin in from the command line: 
