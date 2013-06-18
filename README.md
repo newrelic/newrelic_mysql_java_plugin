@@ -53,6 +53,7 @@ If using your localhost MySQL instance, add your user name and password as well 
 ## Running the Agent
 To run the plugin in from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
+
 To run the plugin in from the command line and detach the process so it will run in the background:
 `$ nohup java -jar newrelic_mysql_plugin*.jar &`
 
