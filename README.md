@@ -13,7 +13,7 @@ The MySQL plugin for New Relic requires the following:
 - A New Relic account. Signup for a free account at http://newrelic.com
 - A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
 - A configured Java Runtime (JRE) environment Version 1.6 or better
-- Network access to New Relic (authenticated proxies are not currently supported)
+- Network access to New Relic (authenticated proxies are not currently supported, but see workaround below)
 
 ## Download
 Download and unpack the New Relic plugin for MySQL from Plugin Central: https://rpm.newrelic.com/plugins/
@@ -72,6 +72,9 @@ If using your localhost MySQL instance, add your user name and password as well 
 ## Running the agent
 To run the plugin in from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
+
+If your host needs a proxy server to access the Internet, you can specify a proxy server & port: 
+`$ java -Dhttps.proxyHost=proxyhost -Dhttps.proxyPort=8080 -jar newrelic_mysql_plugin*.jar`
 
 To run the plugin in from the command line and detach the process so it will run in the background:
 `$ nohup java -jar newrelic_mysql_plugin*.jar &`
