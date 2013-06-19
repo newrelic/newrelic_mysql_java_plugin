@@ -13,6 +13,7 @@ The MySQL plugin for New Relic requires the following:
 - A New Relic account. Signup for a free account at http://newrelic.com
 - A server running MySQL Version 5.0 or greater. Download MySQL for free at http://dev.mysql.com/downloads
 - A configured Java Runtime (JRE) environment Version 1.6 or better
+- Network access to New Relic (authenticated proxies are not currently supported)
 
 ## Download
 Download and unpack the New Relic plugin for MySQL from Plugin Central: https://rpm.newrelic.com/plugins/
