@@ -24,7 +24,8 @@ import java.util.logging.Logger;
 public class MySQL {
 
 	public static final String SEPARATOR = "/";
-
+	private static final String PING = "/* ping */ SELECT 1";
+	
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
 	private  Connection conn = null;									// Cached Database Connection
 	private boolean connectionInitialized = false;
@@ -81,18 +82,31 @@ public class MySQL {
 	}
 	
 	/**
-	 * Check if connection is available.
+	 * Check if connection is available by pinging MySQL server.
 	 * If connection is unavailable return false, otherwise true.
 	 * @return the available state of the connection
 	 */
 	private boolean isConnectionAvailable() {
 	    boolean available = false;
+	    Statement stmt = null;
+	    ResultSet rs = null;
 	    try {
-	        // uses timeout of 2 seconds
-	        available = conn.isValid(2);
+	        logger.fine("Checking connection - pinging MySQL server");
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(PING);
+            available = true;
         } catch (SQLException e) {
-            logger.fine("Error checking connection availability: " + e);
+            logger.fine("The MySQL connection is not available.");
             available = false;
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+                if (rs != null) rs.close();
+            } catch (SQLException e) {
+                logger.fine("Error closing statement/result set: " + e);
+            }
+            rs = null;
+            stmt = null;
         }
 	    return available;
 	}
