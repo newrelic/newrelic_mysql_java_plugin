@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="newrelic_mysql_extension" default="dist" basedir=".">
     
-    <property name="version" value="1.0.0"/>
+    <property name="version" value="1.0.1"/>
     <property name="filename" value="newrelic_mysql_plugin-${version}"/>
     <property name="jarfile" value="${filename}.jar"/>
     <property name="tarfile" value="${filename}.tar.gz"/>
@@ -74,7 +74,7 @@
     	<copy file="CATEGORIES.TXT" todir="${build.tar.src.dir}" />
         <copy file="LICENSE" todir="${build.tar.src.dir}" />
     	<copy file="MYSQL.TXT" todir="${build.tar.src.dir}" />
-        <copy file="README.TXT" todir="${build.tar.src.dir}" />
+        <copy file="README.md" todir="${build.tar.src.dir}" />
         <copy todir="${build.tar.src.dir}">
             <fileset dir="${script.dir}" />
         </copy>

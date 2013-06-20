@@ -27,6 +27,7 @@ public class MySQL {
 
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
 	private  Connection conn = null;									// Cached Database Connection
+	private boolean connectionInitialized = false;
 
 	public MySQL() {
 	}
@@ -37,17 +38,24 @@ public class MySQL {
      * @param host  String Hostname for MySQL Connection
      * @param user  String Database username for MySQL Connection
      * @param passwd String database password for MySQL Connection
+     * @return connection new MySQL Connection
      */
-	 private void getNewConnection(String host, String user, String passwd, String properties) {
-		String dbURL="jdbc:mysql://" + host + "/" + properties;
+	 private Connection getNewConnection(String host, String user, String passwd, String properties) {
+	    Connection newConn = null; 
+	    String dbURL="jdbc:mysql://" + host + "/" + properties;
 			 
 		logger.fine("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
 		try {
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-    		conn = DriverManager.getConnection(dbURL, user, passwd);
+		    if (!connectionInitialized) {
+		        // load jdbc driver
+		        Class.forName("com.mysql.jdbc.Driver").newInstance();
+		        connectionInitialized = true;
+		    }
+		    newConn = DriverManager.getConnection(dbURL, user, passwd);
 		} catch (Exception e) {
 			logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings. " + e.getMessage());
 		}
+		return newConn;
 	}
 
 	/**
@@ -61,11 +69,46 @@ public class MySQL {
 	 */
 	public Connection getConnection(String host, String user, String passwd, String properties) {
 		if (conn == null) {
-			getNewConnection(host, user, passwd, properties);
+			conn = getNewConnection(host, user, passwd, properties);
 		}
 		
-		// TODO: Test Connection, and reconnect if necessary
+		// Test Connection, and reconnect if necessary
+		if (!isConnectionAvailable()) {
+		    closeConnection();
+		    conn = getNewConnection(host, user, passwd, properties);
+		}
 		return conn;
+	}
+	
+	/**
+	 * Check if connection is available.
+	 * If connection is unavailable return false, otherwise true.
+	 * @return the available state of the connection
+	 */
+	private boolean isConnectionAvailable() {
+	    boolean available = false;
+	    try {
+	        // uses timeout of 2 seconds
+	        available = conn.isValid(2);
+        } catch (SQLException e) {
+            logger.fine("Error checking connection availability: " + e);
+            available = false;
+        }
+	    return available;
+	}
+	
+	/**
+	 * Close current connection
+	 */
+	private void closeConnection() {
+	    if (conn != null) {
+	        try {
+                conn.close();
+                conn = null;
+            } catch (SQLException e) {
+                logger.fine("Error closing connection: " + e);
+            }
+	    }
 	}
 
 	/**
