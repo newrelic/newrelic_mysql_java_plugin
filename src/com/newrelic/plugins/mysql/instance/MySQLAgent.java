@@ -82,7 +82,28 @@ public class MySQLAgent extends Agent {
 	   	logger = Context.getLogger();				    				// Set logging to current Context
 	   	MySQL.setLogger(logger);										// Push logger to MySQL Object
 	   	createMetaData();												// Define incremental counters that are value/sec etc
+	   	
+	   	logger.fine("MySQL Agent initialized: " + formatAgentParams(name, host, user, properties, metrics));
 	}
+ 	
+ 	/**
+ 	 * Format Agent parameters for logging
+ 	 * @param name
+ 	 * @param host
+ 	 * @param user
+ 	 * @param properties
+ 	 * @param metrics
+ 	 * @return A formatted String representing the Agent parameters
+ 	 */
+ 	private String formatAgentParams(String name, String host, String user, String properties, String metrics) {
+ 	    StringBuilder builder = new StringBuilder();
+ 	    builder.append("name: ").append(name).append(" | ");
+ 	    builder.append("host: ").append(host).append(" | ");
+ 	    builder.append("user: ").append(user).append(" | ");
+ 	    builder.append("properties: ").append(properties).append(" | ");
+ 	    builder.append("metrics: ").append(metrics).append(" | ");
+ 	    return builder.toString();
+ 	}
 	
 	/**
 	 *  This method is run for every poll cycle of the Agent.
