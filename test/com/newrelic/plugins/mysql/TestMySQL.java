@@ -59,13 +59,28 @@ public class TestMySQL {
 	@Test
 	public void verifyValidMetricValues() {
 		assertTrue(MySQL.validMetricValue("0"));
+		assertTrue(MySQL.validMetricValue("1"));
+		assertTrue(MySQL.validMetricValue("-1"));
+		assertTrue(MySQL.validMetricValue("100"));
+		assertTrue(MySQL.validMetricValue("-100"));
 		assertTrue(MySQL.validMetricValue("456.7789"));
+		assertTrue(MySQL.validMetricValue("-456.7789"));
+		assertTrue(MySQL.validMetricValue(".234"));
+		assertTrue(MySQL.validMetricValue("0.234"));
+		assertTrue(MySQL.validMetricValue("-.234"));
+		assertTrue(MySQL.validMetricValue("-0.234"));
 	}
 
 	@Test
 	public void verifyInValidMetricValues() {
 		assertFalse(MySQL.validMetricValue(""));
 		assertFalse(MySQL.validMetricValue("5.25.45a"));
+		assertFalse(MySQL.validMetricValue("10.38.78.86"));
+		assertFalse(MySQL.validMetricValue("+123"));
+		assertFalse(MySQL.validMetricValue("123-34"));
+		assertFalse(MySQL.validMetricValue("123."));
+		assertFalse(MySQL.validMetricValue("10a"));
+		assertFalse(MySQL.validMetricValue("abc"));
 	}
 
 	@Test

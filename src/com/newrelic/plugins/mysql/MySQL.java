@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * This class provide MySQL specific methods, operations and values for New Relic Agents
@@ -25,6 +26,7 @@ public class MySQL {
 
 	public static final String SEPARATOR = "/";
 	private static final String PING = "/* ping */ SELECT 1";
+	private static final Pattern VALID_METRIC_PATTERN = Pattern.compile("(-)?(\\.)?\\d+(\\.\\d+)?");  // Only integers and floats are valid metric values
 	
 	private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
 	private  Connection conn = null;									// Cached Database Connection
@@ -315,7 +317,7 @@ public class MySQL {
      static boolean validMetricValue(String val) {
      	if (val == null || "".equals(val)) 								//  Empty string values are invalid
      		return false;
-        if (transformStringMetric(val).matches("[0-9.-]+")) 			//  We can only process numerical metrics
+        if (VALID_METRIC_PATTERN.matcher(transformStringMetric(val)).matches()) 			//  We can only process numerical metrics
         	return true;	
    		return false;
  	}
