@@ -55,6 +55,9 @@ public class MySQL {
 		        connectionInitialized = true;
 		    }
 		    newConn = DriverManager.getConnection(dbURL, user, passwd);
+		    if (newConn == null) {
+		        logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings.");
+		    }
 		} catch (Exception e) {
 			logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings. " + e.getMessage());
 		}
@@ -74,9 +77,8 @@ public class MySQL {
 		if (conn == null) {
 			conn = getNewConnection(host, user, passwd, properties);
 		}
-		
 		// Test Connection, and reconnect if necessary
-		if (!isConnectionAvailable()) {
+		else if (!isConnectionAvailable()) {
 		    closeConnection();
 		    conn = getNewConnection(host, user, passwd, properties);
 		}
@@ -90,26 +92,28 @@ public class MySQL {
 	 */
 	private boolean isConnectionAvailable() {
 	    boolean available = false;
-	    Statement stmt = null;
-	    ResultSet rs = null;
-	    try {
-	        logger.fine("Checking connection - pinging MySQL server");
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(PING);
-            available = true;
-        } catch (SQLException e) {
-            logger.fine("The MySQL connection is not available.");
-            available = false;
-        } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (rs != null) rs.close();
+	    if (conn != null) {
+    	    Statement stmt = null;
+    	    ResultSet rs = null;
+    	    try {
+    	        logger.fine("Checking connection - pinging MySQL server");
+                stmt = conn.createStatement();
+                rs = stmt.executeQuery(PING);
+                available = true;
             } catch (SQLException e) {
-                logger.fine("Error closing statement/result set: " + e);
+                logger.fine("The MySQL connection is not available.");
+                available = false;
+            } finally {
+                try {
+                    if (stmt != null) stmt.close();
+                    if (rs != null) rs.close();
+                } catch (SQLException e) {
+                    logger.fine("Error closing statement/result set: " + e);
+                }
+                rs = null;
+                stmt = null;
             }
-            rs = null;
-            stmt = null;
-        }
+	    }
 	    return available;
 	}
 	
