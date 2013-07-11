@@ -79,7 +79,7 @@ public class MySQL {
 			conn = getNewConnection(host, user, passwd, properties);
 		}
 		// Test Connection, and reconnect if necessary
-		else if (!isConnectionAvailable()) {
+		else if (!isConnectionValid()) {
 		    closeConnection();
 		    conn = getNewConnection(host, user, passwd, properties);
 		}
@@ -87,11 +87,11 @@ public class MySQL {
 	}
 	
 	/**
-	 * Check if connection is available by pinging MySQL server.
-	 * If connection is unavailable return false, otherwise true.
-	 * @return the available state of the connection
+	 * Check if connection is valid by pinging MySQL server.
+	 * If connection is null or invalid return false, otherwise true.
+	 * @return the state of the connection
 	 */
-	private boolean isConnectionAvailable() {
+	private boolean isConnectionValid() {
 	    boolean available = false;
 	    if (conn != null) {
     	    Statement stmt = null;
