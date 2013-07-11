@@ -46,8 +46,9 @@ public class MySQL {
 	 private Connection getNewConnection(String host, String user, String passwd, String properties) {
 	    Connection newConn = null; 
 	    String dbURL="jdbc:mysql://" + host + "/" + properties;
+	    String connectionInfo = dbURL + " " + user + "/" + passwd.replaceAll(".", "*");
 			 
-		logger.fine("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
+		logger.fine("Getting new MySQL Connection: " + connectionInfo);
 		try {
 		    if (!connectionInitialized) {
 		        // load jdbc driver
@@ -56,10 +57,10 @@ public class MySQL {
 		    }
 		    newConn = DriverManager.getConnection(dbURL, user, passwd);
 		    if (newConn == null) {
-		        logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings.");
+		        logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings.");
 		    }
 		} catch (Exception e) {
-			logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings. " + e.getMessage());
+			logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings. " + e.getMessage());
 		}
 		return newConn;
 	}
