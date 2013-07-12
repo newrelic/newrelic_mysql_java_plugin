@@ -46,7 +46,7 @@ public class MySQL {
 	 private Connection getNewConnection(String host, String user, String passwd, String properties) {
 	    Connection newConn = null; 
 	    String dbURL="jdbc:mysql://" + host + "/" + properties;
-	    String connectionInfo = dbURL + " " + user + "/" + passwd.replaceAll(".", "*");
+	    String connectionInfo = dbURL + " " + user + "/PASSWORD_FILTERED";
 			 
 		logger.fine("Getting new MySQL Connection: " + connectionInfo);
 		try {
