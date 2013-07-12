@@ -3,6 +3,7 @@ package com.newrelic.plugins.mysql;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -37,13 +38,29 @@ public class TestMySQL {
 		assertNotNull(c);
 	}
 
- 	/*
+ 	@Test
+    public void verifyInvalidConnectionWithBadHost() {
+        Connection c = new MySQL().getConnection("bad_host", MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
+        assertNull(c);
+    }
+ 	
+ 	@Test
+    public void verifyInvalidConnectionWithBadUser() {
+        Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, "bad_user" , MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES);
+        assertNull(c);
+    }
+ 	
 	@Test
-	public void verifyInvalidConnection() {
-		Connection c = MySQL.getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD + "X");
+	public void verifyInvalidConnectionWithBadPassword() {
+		Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, "bad_password", MySQLAgent.AGENT_DEFAULT_PROPERTIES);
 		assertNull(c);
 	}
- 	 */
+	
+	@Test
+    public void verifyInvalidConnectionWithBadProperties() {
+        Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, "bad_properties");
+        assertNull(c);
+    }
  	
 	@Test
 	public void verifyTransformedStringMetrics() {
