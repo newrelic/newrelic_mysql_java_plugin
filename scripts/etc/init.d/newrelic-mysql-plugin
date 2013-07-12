@@ -1,0 +1,112 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          newrelic-mysql-plugin
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: New Relic mysql plugin Debian daemon control script
+# Description:       Controls the New Relic java mysql plugin
+### END INIT INFO
+
+# Author: Joe Niland <joe@originalmind.com.au>
+
+# CONFIGURATION
+# - Change DAEMONDIR to your chosen location for the plugin jar file.
+# - To run on boot, don't forget to run update-rc.d newrelic-mysql-plugin defaults.
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="New Relic mysql plugin daemon"
+NAME=newrelic-mysql-plugin
+DAEMON=newrelic_mysql_plugin*.jar
+DAEMON_ARGS=""
+PIDFILE=/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+JAVA=/usr/bin/java
+DAEMONDIR=/path/to/plugins/
+
+# Exit if the package is not installed
+#[ -x "$DAEMON" ] || exit 0
+if test ! -x $JAVA -o ! -e $DAEMONDIR$DAEMON 
+then
+    echo $JAVA or $DAEMONDIR/$DAEMON do not exist
+    exit 0
+fi
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+do_start() {
+    pid=$(pidofproc -p $PIDFILE $DAEMON)
+    if [ -n "$pid" ] ; then
+        log_begin_msg "$DESC already running."
+        log_end_msg 0
+        exit 0
+    fi
+
+    log_daemon_msg "Starting $DESC: "
+    # add this if you need to log the output: --no-close
+    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR$DAEMON
+    # append this to the above line if you need to log the output:  > /var/log/newrelic-plugin.log 2>&1
+    log_end_msg $?
+}
+
+do_stop() {
+    log_begin_msg "Stopping $DESC ..."
+    start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+    RC=$?
+    [ $RC -eq 0 ] && rm -f $PIDFILE
+    log_end_msg $RC
+}
+
+case "$1" in
+    start)
+        [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+        do_start
+        case "$?" in
+            0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+              2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+    stop)
+        [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+        do_stop
+        case "$?" in
+            0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+              2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+    status)
+        status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+        ;;
+    #reload)
+        # not implemented
+        #;;
+    restart|force-reload)
+        log_daemon_msg "Restarting $DESC" "$NAME"
+        do_stop
+        case "$?" in
+          0|1)
+              do_start
+              case "$?" in
+                  0) log_end_msg 0 ;;
+                  1) log_end_msg 1 ;; # Old process is still running
+                  *) log_end_msg 1 ;; # Failed to start
+              esac
+              ;;
+          *)
+              # Failed to stop
+              log_end_msg 1
+              ;;
+        esac
+        ;;
+    *)
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+        exit 3
+        ;;
+esac
+
+exit 0
