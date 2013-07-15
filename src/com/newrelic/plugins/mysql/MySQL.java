@@ -46,8 +46,9 @@ public class MySQL {
 	 private Connection getNewConnection(String host, String user, String passwd, String properties) {
 	    Connection newConn = null; 
 	    String dbURL="jdbc:mysql://" + host + "/" + properties;
+	    String connectionInfo = dbURL + " " + user + "/PASSWORD_FILTERED";
 			 
-		logger.fine("Getting new MySQL Connection " + dbURL + " " + user + "/" + passwd.replaceAll(".", "*"));
+		logger.fine("Getting new MySQL Connection: " + connectionInfo);
 		try {
 		    if (!connectionInitialized) {
 		        // load jdbc driver
@@ -55,8 +56,11 @@ public class MySQL {
 		        connectionInitialized = true;
 		    }
 		    newConn = DriverManager.getConnection(dbURL, user, passwd);
+		    if (newConn == null) {
+		        logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings.");
+		    }
 		} catch (Exception e) {
-			logger.severe("Unable to obtain a new database connection, check your MySQL configuration settings. " + e.getMessage());
+			logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings. " + e.getMessage());
 		}
 		return newConn;
 	}
@@ -74,9 +78,8 @@ public class MySQL {
 		if (conn == null) {
 			conn = getNewConnection(host, user, passwd, properties);
 		}
-		
 		// Test Connection, and reconnect if necessary
-		if (!isConnectionAvailable()) {
+		else if (!isConnectionValid()) {
 		    closeConnection();
 		    conn = getNewConnection(host, user, passwd, properties);
 		}
@@ -84,32 +87,34 @@ public class MySQL {
 	}
 	
 	/**
-	 * Check if connection is available by pinging MySQL server.
-	 * If connection is unavailable return false, otherwise true.
-	 * @return the available state of the connection
+	 * Check if connection is valid by pinging MySQL server.
+	 * If connection is null or invalid return false, otherwise true.
+	 * @return the state of the connection
 	 */
-	private boolean isConnectionAvailable() {
+	private boolean isConnectionValid() {
 	    boolean available = false;
-	    Statement stmt = null;
-	    ResultSet rs = null;
-	    try {
-	        logger.fine("Checking connection - pinging MySQL server");
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(PING);
-            available = true;
-        } catch (SQLException e) {
-            logger.fine("The MySQL connection is not available.");
-            available = false;
-        } finally {
-            try {
-                if (stmt != null) stmt.close();
-                if (rs != null) rs.close();
+	    if (conn != null) {
+    	    Statement stmt = null;
+    	    ResultSet rs = null;
+    	    try {
+    	        logger.fine("Checking connection - pinging MySQL server");
+                stmt = conn.createStatement();
+                rs = stmt.executeQuery(PING);
+                available = true;
             } catch (SQLException e) {
-                logger.fine("Error closing statement/result set: " + e);
+                logger.fine("The MySQL connection is not available.");
+                available = false;
+            } finally {
+                try {
+                    if (stmt != null) stmt.close();
+                    if (rs != null) rs.close();
+                } catch (SQLException e) {
+                    logger.fine("Error closing statement/result set: " + e);
+                }
+                rs = null;
+                stmt = null;
             }
-            rs = null;
-            stmt = null;
-        }
+	    }
 	    return available;
 	}
 	

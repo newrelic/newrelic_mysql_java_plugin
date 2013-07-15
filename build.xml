@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="newrelic_mysql_extension" default="dist" basedir=".">
     
-    <property name="version" value="1.0.3"/>
+    <property name="version" value="1.0.4"/>
     <property name="filename" value="newrelic_mysql_plugin-${version}"/>
     <property name="jarfile" value="${filename}.jar"/>
     <property name="tarfile" value="${filename}.tar.gz"/>
