@@ -191,7 +191,7 @@ public class MySQLAgent extends Agent {
 		 	derived.put("newrelic/connections_running", (int)threads_running);
 		 	derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
 		 	//derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
-		 	derived.put("newrelic/pct_connnection_utilization", (threads_running  / threads_connected) * 100.0); 
+		 	derived.put("newrelic/pct_connection_utilization", (threads_running  / threads_connected) * 100.0); 
 
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating connection " + e.getMessage());	 		
@@ -381,7 +381,7 @@ public class MySQLAgent extends Agent {
 		addMetricMeta("newrelic/replication_lag", 		new MetricMeta(false, "Seconds"));
 		addMetricMeta("newrelic/replication_status", 	new MetricMeta(false, "State"));
 
-		addMetricMeta("newrelic/pct_connnection_utilization", 		new MetricMeta(false, "Percent"));
+		addMetricMeta("newrelic/pct_connection_utilization", 		new MetricMeta(false, "Percent"));
 		addMetricMeta("newrelic/pct_innodb_buffer_pool_hit_ratio",	new MetricMeta(false, "Percent"));
 		addMetricMeta("newrelic/pct_query_cache_hit_utilization", 	new MetricMeta(false, "Percent"));
 		addMetricMeta("newrelic/pct_query_cache_memory_in_use", 	new MetricMeta(false, "Percent"));
