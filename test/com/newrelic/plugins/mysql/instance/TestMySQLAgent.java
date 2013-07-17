@@ -66,7 +66,7 @@ public class TestMySQLAgent {
     }
     
     @Test
-    public void testMutexMetricReporting() throws IllegalArgumentException, SecurityException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchFieldException, InterruptedException {
+    public void testMutexMetricReporting() throws InterruptedException {
         
         Map<String, Number> results = new HashMap<String, Number>();
         results.put("status/qcache_free_memory", 10);
