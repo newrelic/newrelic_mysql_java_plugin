@@ -22,7 +22,7 @@ Linux example:
 
     $ mkdir /path/to/newrelic-plugin
     $ cd /path/to/newrelic-plugin
-    $ tar xfz newrelic_mysql_plugin*.tar.gz
+    $ tar -zxvf newrelic_mysql_plugin*.tar.gz
     
 ## Create MySQL user if necessary
 The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL script located at [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql).
@@ -33,9 +33,9 @@ This script will create the following user:
 
     username: newrelic
     host: localhost or 127.0.0.1
-    password: *B8B274C6AF8165B631B4B517BD0ED2694909F464
+    password: *B8B274C6AF8165B631B4B517BD0ED2694909F464 (hashed value)
 
-*You can choose to use a different MySQL user name and password. see [MYSQL.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/MYSQL.TXT) for more info.*
+*You can choose to use a different MySQL user name and password. See [MYSQL.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/MYSQL.TXT) for more info.*
 
 ## Configuring your agent environment
 The New Relic plugin for MySQL runs an agent process to collect and report MySQL metrics to New Relic. Configure your New Relic license and MySQL databases.
@@ -69,6 +69,8 @@ If using your localhost MySQL instance, add your user name and password as well 
        },
     ]
 
+If your MySQL Server is bound to an externally visible IP address, both localhost and 127.0.0.1 will not be accessible as the host for the MySQL Plugin. In order for the plugin to connect, you will need to set the host to your externally visible IP address. Due to security concerns, we strongly recommend **not** using the default password in this case and instead setting it to some other value.
+
 ## Running the agent
 To run the plugin in from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
@@ -78,8 +80,6 @@ If your host needs a proxy server to access the Internet, you can specify a prox
 
 To run the plugin in from the command line and detach the process so it will run in the background:
 `$ nohup java -jar newrelic_mysql_plugin*.jar &`
-
-*Note: At present there are no [init.d](http://en.wikipedia.org/wiki/Init) scripts to start the New Relic MySQL plugin at system startup.*
 
 ## Keep this process running
 You can use services like these to manage this process.
