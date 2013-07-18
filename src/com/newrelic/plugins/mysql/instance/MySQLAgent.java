@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "1.0.4";
+	private static final String version = "1.0.5";
 
 	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
 	public static final String AGENT_DEFAULT_USER = "newrelic";
@@ -468,7 +468,7 @@ public class MySQLAgent extends Agent {
 	 * @return MetridMeta  Structure of information about the metric
 	 */
 	private MetricMeta getMetricMeta(String key) {
-		if (key.startsWith("innodb_mutex/")) {								// This is a catch all for dynamic name metrics
+		if (key.startsWith("innodb_mutex/") && !metricsMeta.containsKey(key)) {								// This is a catch all for dynamic name metrics
 			addMetricMeta(key, new MetricMeta(true, "Operations/Second"));
 		}
  		return (MetricMeta)metricsMeta.get(key.toLowerCase());				// Look for existing meta data on metric
