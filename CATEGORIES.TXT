@@ -29,5 +29,15 @@ The JSON attributes are:
 * value_metrics - A CSV list of metrics that are values
 * counter_metrics - A CSV list of metrics that are per second values
 
+Sample list of available metrics:
+
+* status              - general status metrics
+* master              - master status metrics
+* slave               - slave status metrics including replication metrics
+* buffer_pool_stats   - buffer pool status metrics
+* innodb_status       - innodb status metrics
+* innodb_metrics      - innodb information metrics
+* innodb_mutex        - innodb mutex metrics
+
 Currently, the New Relic Platform does not allow for customized dashboards per user.
 In the future this feature will enable custom categories to be fully utilized.
