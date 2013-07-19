@@ -22,7 +22,7 @@ Linux example:
 
     $ mkdir /path/to/newrelic-plugin
     $ cd /path/to/newrelic-plugin
-    $ tar xfz newrelic_mysql_plugin*.tar.gz
+    $ tar zxvf newrelic_mysql_plugin*.tar.gz
     
 ## Create MySQL user if necessary
 The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL script located at [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql).
@@ -33,9 +33,14 @@ This script will create the following user:
 
     username: newrelic
     host: localhost or 127.0.0.1
-    password: *B8B274C6AF8165B631B4B517BD0ED2694909F464
+    password: *B8B274C6AF8165B631B4B517BD0ED2694909F464 (hashed value)
 
-*You can choose to use a different MySQL user name and password. see [MYSQL.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/MYSQL.TXT) for more info.*
+*You can choose to use a different MySQL user name and password. See [MYSQL.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/MYSQL.TXT) for more info.*
+
+If your MySQL Server is bound to an externally visible IP address, both localhost and 127.0.0.1 will not be accessible via TCP as the host for the MySQL Plugin. In order for the plugin to connect, you will need to create a user for your IP address. Due to security concerns in this case, we strongly recommend **not** using the default password and instead setting it to some other value.
+
+    CREATE USER newrelic@<INSERT_IP_ADDRESS_HERE> IDENTIFIED BY '<INSERT_PASSWORD_HERE>';
+    GRANT PROCESS, REPLICATION CLIENT ON *.* TO newrelic@<INSERT_IP_ADDRESS_HERE>;
 
 ## Configuring your agent environment
 The New Relic plugin for MySQL runs an agent process to collect and report MySQL metrics to New Relic. Configure your New Relic license and MySQL databases.
@@ -50,7 +55,7 @@ Linux example:
     # Edit config/newrelic.properties and paste in your license key
 
 ### Configure your MySQL properties
-Each running MySQL plugin agent requires a JSON configuration file defining the access to the monitored MySQL instance(s). An example file is provided in the config directory.
+Each running MySQL plugin agent requires a JSON configuration file which defines the access to the monitored MySQL instance(s). An example file is provided in the config directory.
 
 Linux example:
 
@@ -61,25 +66,32 @@ If using your localhost MySQL instance, add your user name and password as well 
 
     [
       {
-        "name" : "Localhost",
+        "name" : "Production Master",
         "host" : "localhost",
         "metrics" : "status,newrelic",
         "user" : "USER_NAME_HERE",
         "passwd" : "USER_PASSWD_HERE"
-       },
+      }
     ]
 
+#### Externally Visible IP Address
+
+If your MySQL Server is bound to an externally visible IP address, set the 'host' to your IP address and use the username and password that you created above. See the 'Create MySQL user if necessary' section above.
+
+#### Metrics
+
+The MySQL Plugin is capable of reporting different sets of metrics by configuring the 'metrics' attribute. E.g., add the 'slave' category to report replication metrics. 
+*See [CATEGORIES.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/CATEGORIES.TXT) for more info.*
+
 ## Running the agent
-To run the plugin in from the command line: 
+To run the plugin from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
 
 If your host needs a proxy server to access the Internet, you can specify a proxy server & port: 
 `$ java -Dhttps.proxyHost=proxyhost -Dhttps.proxyPort=8080 -jar newrelic_mysql_plugin*.jar`
 
-To run the plugin in from the command line and detach the process so it will run in the background:
+To run the plugin from the command line and detach the process so it will run in the background:
 `$ nohup java -jar newrelic_mysql_plugin*.jar &`
-
-*Note: At present there are no [init.d](http://en.wikipedia.org/wiki/Init) scripts to start the New Relic MySQL plugin at system startup.*
 
 ## Keep this process running
 You can use services like these to manage this process.
