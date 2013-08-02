@@ -23,11 +23,10 @@ DAEMON_ARGS=""
 PIDFILE=/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 JAVA=/usr/bin/java
-DAEMONDIR=/path/to/plugins/
+DAEMONDIR=/path/to/plugins
 
 # Exit if the package is not installed
-#[ -x "$DAEMON" ] || exit 0
-if test ! -x $JAVA -o ! -e $DAEMONDIR$DAEMON 
+if test ! -x $JAVA -o ! -e $DAEMONDIR/$DAEMON 
 then
     echo $JAVA or $DAEMONDIR/$DAEMON do not exist
     exit 0
@@ -49,7 +48,7 @@ do_start() {
 
     log_daemon_msg "Starting $DESC: "
     # add this if you need to log the output: --no-close
-    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR$DAEMON
+    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR/$DAEMON
     # append this to the above line if you need to log the output:  > /var/log/newrelic-plugin.log 2>&1
     log_end_msg $?
 }
