@@ -1,5 +1,5 @@
 # MySQL plugin for New Relic
-Find the New Relic MySQL plugin in the [New Relic storefront](https://rpm.newrelic.com/plugins/new_relic_mysql/52)
+Find the New Relic MySQL plugin in the [New Relic storefront](http://newrelic.com/plugins/new-relic-inc/52)
 
 Find the New Relic MySQL plugin in [Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
