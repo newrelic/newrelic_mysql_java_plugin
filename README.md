@@ -16,7 +16,7 @@ The MySQL plugin for New Relic requires the following:
 - Network access to New Relic (authenticated proxies are not currently supported, but see workaround below)
 
 ## Download
-Download and unpack the New Relic plugin for MySQL from Plugin Central: https://rpm.newrelic.com/plugins/
+Download and unpack the New Relic plugin for MySQL from Plugin Central: https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance
 
 Linux example:
 
