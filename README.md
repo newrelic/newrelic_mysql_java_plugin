@@ -1,10 +1,10 @@
 # MySQL plugin for New Relic
-Find the New Relic MySQL plugin in the [New Relic storefront](https://rpm.newrelic.com/plugins/new_relic_mysql/52)
+Find the New Relic MySQL plugin in the [New Relic storefront](http://newrelic.com/plugins/new-relic-inc/52)
 
 Find the New Relic MySQL plugin in [Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
 ----
-**Your New Relic MySQL plugin can be operational in 2 minutes when following these steps.**
+**Your New Relic MySQL plugin can be operational in just a few minutes when following these steps.**
 
 ----
 ## Prerequisites
@@ -16,7 +16,7 @@ The MySQL plugin for New Relic requires the following:
 - Network access to New Relic (authenticated proxies are not currently supported, but see workaround below)
 
 ## Download
-Download and unpack the New Relic plugin for MySQL from Plugin Central: https://rpm.newrelic.com/plugins/
+Download and unpack the [New Relic plugin for MySQL from Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
 Linux example:
 
@@ -102,9 +102,12 @@ You can use services like these to manage this process.
 - [Monit](http://mmonit.com/monit/)
 
 ## For support
-Plugin support for troubleshooting assistance can be obtained by visiting [support.newrelic.com](https://support.newrelic.com)
+Plugin support and troubleshooting assistance can be obtained by visiting [support.newrelic.com](https://support.newrelic.com)
 
 ## Fork me!
 The MySQL plugin uses an extensible architecture that allows you to define new MySQL metrics beyond the provided defaults. To expose more data about your MySQL servers, fork this repository, create a new GUID, add the metrics you would like to collect to config/metric.category.json and then build summary metrics and dashboards to expose your newly collected metrics.
 
 *See [CATEGORIES.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/CATEGORIES.TXT) for more info.*
+
+## Credits
+The MySQL plugin was originally authored by [Ronald Bradford](http://ronaldbradford.com/) of [EffectiveMySQL](http://effectivemysql.com/). Subsequent updates and support are provided by [New Relic](http://newrelic.com/platform).
