@@ -1,8 +1,9 @@
-
 #!/bin/bash
 #
-# This shell script takes care of starting and stopping
-# the New Relic MySQL Plugin
+#
+# chkconfig:   2345 80 20
+# description: Starts and stops the New Relic MySQL Plugin
+# processname: java-newrelic-mysql-plugin
 
 
 # Source function library.
