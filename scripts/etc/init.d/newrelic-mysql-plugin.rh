@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+#
+# chkconfig:   2345 80 20
+# description: Starts and stops the New Relic MySQL Plugin
+# processname: java-newrelic-mysql-plugin
+
+
+# Source function library.
+FUNCTIONS="/etc/init.d/functions"
+[ -s "${FUNCTIONS}" ] && . ${FUNCTIONS}
+
+# Program Specific Variables
+PROGRAM="newrelic-mysql-plugin"
+LOCK_FILE="/var/lock/subsys/${PROGRAM}"
+PID_FILE="/var/run/${PROGRAM}.pid"
+
+# Set this to the plugin directory
+[ -z "${PLUGIN_DIR}" ] && PLUGIN_DIR="/usr/local/newrelic-mysql"
+
+# Logging
+[ -z "${LOG_DIR}" ] && LOG_DIR="/var/log"
+LOG_FILE="${LOG_DIR}/${PROGRAM}.log"
+
+# Java Process
+JAVA=`which java 2>/dev/null`
+[ -z "${JAVA}" ] && echo "java not found in the PATH" && exit 1
+
+# Plugin Location verification
+[ -z "${PLUGIN_DIR}" ] && echo "PLUGIN_DIR must be defined" && exit 2
+[ ! -d "${PLUGIN_DIR}" ] && echo "PLUGIN_DIR '${PLUGIN_DIR}' is not a directory" && exit 3
+
+# New Relic MySQL Jar verification
+cd ${PLUGIN_DIR}
+JAR=`ls *.jar 2>/dev/null | head -1`
+[ -z "${JAR}" ] && echo "No New Relic jar found in '${PLUGIN_DIR}'" && exit 4
+
+start() {
+        # Start daemons.
+        echo -n $"Starting ${PROGRAM}: "
+        nohup ${JAVA} -jar ${JAR} > ${LOG_FILE} 2>&1 &
+	RETVAL=$?
+        echo $! > ${PID_FILE}
+        echo
+	[ $RETVAL -eq 0 ] && touch ${LOCK_FILE}
+	return $RETVAL
+}
+
+stop() {
+        echo -n $"Shutting down ${PROGRAM}: "
+        [ ! -s "${PID_FILE}" ] && echo "No pid file found" && exit 1
+        PID=`cat ${PID_FILE}`
+	#killproc -p ${PID}
+        kill -9 ${PID} > /dev/null 2>&1
+	RETVAL=$?
+        echo
+	[ $RETVAL -eq 0 ] && rm -f ${LOCK_FILE}
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status $prog
+	;;
+  restart|force-reload)
+	stop
+	start
+	;;
+  try-restart|condrestart)
+	if status $prog > /dev/null; then
+	    stop
+	    start
+	fi
+	;;
+  reload)
+	exit 3
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
+	exit 2
+esac
