@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
 	private static final String GUID = "com.newrelic.plugins.mysql.instance";
-	private static final String version = "1.0.6";
+	private static final String version = "1.0.7";
 
 	public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
 	public static final String AGENT_DEFAULT_USER = "newrelic";
@@ -263,32 +263,45 @@ public class MySQLAgent extends Agent {
 	 	} catch (Exception e) {
 		 	logger.severe("An error occured calculating Temporary Table metrics " + e.getMessage());	 		
 	 	}
-	 	try {															// Catch any number conversion problems
-		 	/* Replication specifics */
-	 		if (metrics.contains("slave" + COMMA)) {					// "slave" category is a pre-requisite for these metrics
-			 	derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
-			 	int slave_io_thread_running  = existing.get("slave/slave_io_running").intValue();
-			 	int slave_sql_thread_running = existing.get("slave/slave_sql_running").intValue();
-			 	
-			 	/* both need to be YES, which is 1 */
-			 	int replication_status = 1;								// Default as in ERROR
-			 	if (slave_io_thread_running + slave_sql_thread_running == 2) 
-			 		replication_status = 0;
-			 	derived.put("newrelic/replication_status", replication_status);
-			 	derived.put("newrelic/slave_relay_log_bytes", existing.get("slave/relay_log_pos").intValue());
-			 	derived.put("newrelic/master_log_lag_bytes", existing.get("slave/read_master_log_pos").intValue() -  existing.get("slave/exec_master_log_pos").intValue());
-	 		} else {													// This is a hack because the NR UI can't handle it missing for graphs
-			 	derived.put("newrelic/replication_lag",    0);
-			 	derived.put("newrelic/replication_status", 0);
-			 	derived.put("newrelic/slave_relay_log_bytes", 0);
-			 	derived.put("newrelic/master_log_lag_bytes", 0);
- 	 		}
-	 	} catch (Exception e) {
-		 	logger.severe("An error occured calculating Replication Metrics " + e.getMessage());	 		
-	 	}
+        // Catch any number conversion problems
+        try {
+            /* Replication specifics */
+            // "slave" category is a pre-requisite for these metrics
+            if (metrics.contains("slave" + COMMA)) {
+                if (existing.containsKey("slave/seconds_behind_master")) {
+                    derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
+                }
 
-	 	return derived;
-	}
+                if (existing.containsKey("slave/slave_io_running") && existing.containsKey("slave/slave_sql_running")) {
+                    int slave_io_thread_running  = existing.get("slave/slave_io_running").intValue();
+                    int slave_sql_thread_running = existing.get("slave/slave_sql_running").intValue();
+                
+                    /* both need to be YES, which is 1 */
+                    int replication_status = 1;                             // Default as in ERROR
+                    if (slave_io_thread_running + slave_sql_thread_running == 2) 
+                        replication_status = 0;
+                    derived.put("newrelic/replication_status", replication_status);
+                }
+
+                if (existing.containsKey("slave/relay_log_pos")) {
+                    derived.put("newrelic/slave_relay_log_bytes", existing.get("slave/relay_log_pos").intValue());
+                }
+
+                if (existing.containsKey("slave/read_master_log_pos") && existing.containsKey("slave/exec_master_log_pos")) {
+                    derived.put("newrelic/master_log_lag_bytes", existing.get("slave/read_master_log_pos").intValue() -  existing.get("slave/exec_master_log_pos").intValue());
+                }
+            } else {// This is a hack because the NR UI can't handle it missing for graphs
+                derived.put("newrelic/replication_lag",    0);
+                derived.put("newrelic/replication_status", 0);
+                derived.put("newrelic/slave_relay_log_bytes", 0);
+                derived.put("newrelic/master_log_lag_bytes", 0);
+            }
+        } catch (Exception e) {
+            logger.severe("An error occured calculating Replication Metrics " + e.getMessage());
+        }
+
+        return derived;
+    }
 
 	/**
 	 * This method does the reporting of metrics to New Relic
