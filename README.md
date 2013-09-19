@@ -62,7 +62,7 @@ Linux example:
     $ cp config/template_mysql.instance.json config/mysql.instance.json
     # Edit config/mysql.instance.json
 
-If using your localhost MySQL instance, add your user name and password as well as a meaningful name which will appear in the New Relic user interface for the MySQL instance. Set the value for the "name" attribute to match your MySQL databases purpose, e.g. "Production Master". 
+If using your localhost MySQL instance, add a meaningful name which will appear in the New Relic user interface for the MySQL instance. Set the "name" attribute to match your MySQL databases purpose, e.g. "Production Master". If you used the provided [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql) to generate a default user and password, then you do not need to set the "user" and "passwd" attributes. If you are not using the default user and password, you will need to provide a user and clear text password with the same limited priveleges as shown below.
 
     [
       {
@@ -70,7 +70,7 @@ If using your localhost MySQL instance, add your user name and password as well 
         "host" : "localhost",
         "metrics" : "status,newrelic",
         "user" : "USER_NAME_HERE",
-        "passwd" : "USER_PASSWD_HERE"
+        "passwd" : "USER_CLEAR_TEXT_PASSWORD_HERE"
       }
     ]
 
