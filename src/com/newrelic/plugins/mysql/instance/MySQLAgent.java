@@ -156,148 +156,133 @@ public class MySQLAgent extends Agent {
     protected Map<String, Number> newRelicMetrics(Map<String, Number> existing, String metrics) {
         Map<String, Number> derived = new HashMap<String,Number>();
 
-         if (!metrics.contains("newrelic" + COMMA)) return derived;		// Only calculate newrelic category if specified.
-         if (!metrics.contains("status" + COMMA))   return derived;		// "status" category is a pre-requisite for newrelic metrics
+        if (!metrics.contains("newrelic" + COMMA)) return derived;		// Only calculate newrelic category if specified.
+        if (!metrics.contains("status" + COMMA))   return derived;		// "status" category is a pre-requisite for newrelic metrics
 
-         logger.fine("Adding New Relic derived metrics");
+        logger.fine("Adding New Relic derived metrics");
 
-         try {															// Catch any number conversion problems
-             /* read and write volume */
-             derived.put("newrelic/volume_reads",
-                         existing.get("status/com_select").intValue()  + existing.get("status/qcache_hits").intValue());
+        /* read and write volume */
+        if(areRequiredMetricsPresent("Reads", existing, "status/com_select", "status/qcache_hits")) {
+            derived.put("newrelic/volume_reads", existing.get("status/com_select").intValue() + existing.get("status/qcache_hits").intValue());
+        }
+
+        if(areRequiredMetricsPresent("Writes", existing, "status/com_insert", "status/com_update", "status/com_delete", "status/com_replace", "status/com_insert_select",
+                "status/com_update_multi", "status/com_delete_multi", "status/com_replace_select")) {
             derived.put("newrelic/volume_writes",
-                        existing.get("status/com_insert").intValue()  + existing.get("status/com_insert_select").intValue() +
-                        existing.get("status/com_update").intValue()  + existing.get("status/com_update_multi").intValue() +
-                        existing.get("status/com_delete").intValue()  + existing.get("status/com_delete_multi").intValue() +
-                        existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
+                       existing.get("status/com_insert").intValue()  + existing.get("status/com_insert_select").intValue() +
+                       existing.get("status/com_update").intValue()  + existing.get("status/com_update_multi").intValue() +
+                       existing.get("status/com_delete").intValue()  + existing.get("status/com_delete_multi").intValue() +
+                       existing.get("status/com_replace").intValue() + existing.get("status/com_replace_select").intValue());
+        }
 
-         } catch (Exception e) {
-             logger.severe("An error occured calculating read/write volume " + e.getMessage());
-         }
+        /* read and write throughput */
+        if(areRequiredMetricsPresent("Read Throughput", existing, "status/bytes_sent")) {
+            derived.put("newrelic/bytes_reads",  existing.get("status/bytes_sent").intValue());
+        }
 
-         try {															// Catch any number conversion problems
-            /* read and write throughput */
-             derived.put("newrelic/bytes_reads",  existing.get("status/bytes_sent").intValue());
-             derived.put("newrelic/bytes_writes", existing.get("status/bytes_received").intValue());
-         } catch (Exception e) {
-             logger.severe("An error occured calculating read/write throughput " + e.getMessage());
-         }
+        if(areRequiredMetricsPresent("Write Throughput", existing, "status/bytes_received")) {
+            derived.put("newrelic/bytes_writes", existing.get("status/bytes_received").intValue());
+        }
 
-         try {															// Catch any number conversion problems
-            /* Connection management */
-             float threads_connected = existing.get("status/threads_connected").floatValue();
-             float threads_running   = existing.get("status/threads_running").floatValue();
-             derived.put("newrelic/connections_connected", (int)threads_connected);
-             derived.put("newrelic/connections_running", (int)threads_running);
-             derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
-             //derived.put("newrelic/connections_maximum", existing.get("status/max_used_connections").intValue());
-             derived.put("newrelic/pct_connection_utilization", (threads_running  / threads_connected) * 100.0);
+        /* Connection management */
+        if(areRequiredMetricsPresent("Connection Management", existing, "status/threads_connected", "status/threads_running", "status/threads_cached")) {
+            float threads_connected = existing.get("status/threads_connected").floatValue();
+            float threads_running   = existing.get("status/threads_running").floatValue();
 
-         } catch (Exception e) {
-             logger.severe("An error occured calculating connection " + e.getMessage());
-         }
+            derived.put("newrelic/connections_connected", (int)threads_connected);
+            derived.put("newrelic/connections_running", (int)threads_running);
+            derived.put("newrelic/connections_cached", existing.get("status/threads_cached").intValue());
+            derived.put("newrelic/pct_connection_utilization", (threads_running  / threads_connected) * 100.0);
+        }
 
-         try {															// Catch any number conversion problems
-             /* InnoDB Metrics */
-             derived.put("newrelic/innodb_bp_pages_created", existing.get("status/innodb_pages_created").intValue());
-             derived.put("newrelic/innodb_bp_pages_read",    existing.get("status/innodb_pages_read").intValue());
-             derived.put("newrelic/innodb_bp_pages_written", existing.get("status/innodb_pages_written").intValue());
+        /* InnoDB Metrics */
+        if(areRequiredMetricsPresent("InnoDB", existing, "status/innodb_pages_created", "status/innodb_pages_read", "status/innodb_pages_written",
+                "status/innodb_buffer_pool_read_requests", "status/innodb_buffer_pool_reads", "status/innodb_data_fsyncs", "status/innodb_os_log_fsyncs")) {
+            derived.put("newrelic/innodb_bp_pages_created", existing.get("status/innodb_pages_created").intValue());
+            derived.put("newrelic/innodb_bp_pages_read",    existing.get("status/innodb_pages_read").intValue());
+            derived.put("newrelic/innodb_bp_pages_written", existing.get("status/innodb_pages_written").intValue());
 
-             /* Innodb Specific Metrics */
-             float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
-             float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
+            /* Innodb Specific Metrics */
+            float innodb_read_requests = existing.get("status/innodb_buffer_pool_read_requests").floatValue();
+            float innodb_reads = existing.get("status/innodb_buffer_pool_reads").floatValue();
             derived.put("newrelic/pct_innodb_buffer_pool_hit_ratio",
-                        (innodb_read_requests / (innodb_read_requests + innodb_reads)) * 100.0);
+                       (innodb_read_requests / (innodb_read_requests + innodb_reads)) * 100.0);
+            derived.put("newrelic/innodb_fsyncs_data",   existing.get("status/innodb_data_fsyncs").intValue());
+            derived.put("newrelic/innodb_fsyncs_os_log", existing.get("status/innodb_os_log_fsyncs").intValue());
+        }
 
-             derived.put("newrelic/innodb_fsyncs_data",   existing.get("status/innodb_data_fsyncs").intValue());
-             derived.put("newrelic/innodb_fsyncs_os_log", existing.get("status/innodb_os_log_fsyncs").intValue());
+        /* InnoDB Buffer Metrics */
+        if(areRequiredMetricsPresent("InnoDB Buffers", existing, "status/innodb_buffer_pool_pages_total", "status/innodb_buffer_pool_pages_data",
+                "status/innodb_buffer_pool_pages_misc", "status/innodb_buffer_pool_pages_dirty", "status/innodb_buffer_pool_pages_free")) {
+            int pages_total = existing.get("status/innodb_buffer_pool_pages_total").intValue();
+            int pages_data = existing.get("status/innodb_buffer_pool_pages_data").intValue();
+            int pages_misc = existing.get("status/innodb_buffer_pool_pages_misc").intValue();
+            int pages_dirty = existing.get("status/innodb_buffer_pool_pages_dirty").intValue();
+            int pages_free = existing.get("status/innodb_buffer_pool_pages_free").intValue();
 
-         } catch (Exception e) {
-             logger.severe("An error occured calculating InnoDB metrics " + e.getMessage());
+            derived.put("newrelic/innodb_buffer_pool_pages_clean",  pages_data - pages_dirty);
+            derived.put("newrelic/innodb_buffer_pool_pages_dirty",  pages_dirty);
+            derived.put("newrelic/innodb_buffer_pool_pages_misc",   pages_misc);
+            derived.put("newrelic/innodb_buffer_pool_pages_free",   pages_free);
+            derived.put("newrelic/innodb_buffer_pool_pages_unassigned",   pages_total - pages_data - pages_free - pages_misc);
+        }
+
+        /* Query Cache */
+        if(areRequiredMetricsPresent("Query Cache", existing, "status/qcache_hits", "status/com_select", "status/qcache_free_blocks", "status/qcache_total_blocks",
+                "status/qcache_inserts", "status/qcache_not_cached")) {
+            float qc_hits = existing.get("status/qcache_hits").floatValue();
+            float reads   = existing.get("status/com_select").floatValue();
+            float free    = existing.get("status/qcache_free_blocks").floatValue();
+            float total   = existing.get("status/qcache_total_blocks").floatValue();
+
+            derived.put("newrelic/query_cache_hits", (int)qc_hits);
+            derived.put("newrelic/query_cache_misses", existing.get("status/qcache_inserts").intValue());
+            derived.put("newrelic/query_cache_not_cached", existing.get("status/qcache_not_cached").intValue());
+
+            derived.put("newrelic/pct_query_cache_hit_utilization", (qc_hits / (qc_hits + reads))* 100.0);
+            derived.put("newrelic/pct_query_cache_memory_in_use",   100 - ((free/total)* 100.0));
+        }
+
+        /* Temp Table */
+        if(areRequiredMetricsPresent("Temp Tables", existing, "status/created_tmp_tables", "status/created_tmp_disk_tables")) {
+            float tmp_tables = existing.get("status/created_tmp_tables").floatValue();
+            float tmp_tables_disk = existing.get("status/created_tmp_disk_tables").floatValue();
+
+            derived.put("newrelic/pct_tmp_tables_written_to_disk", (tmp_tables_disk/tmp_tables)* 100.0);
          }
 
-         try {															// Catch any number conversion problems
-             /* InnoDB Metrics */
-
-             int pages_total = existing.get("status/innodb_buffer_pool_pages_total").intValue();
-             int pages_data = existing.get("status/innodb_buffer_pool_pages_data").intValue();
-             int pages_misc = existing.get("status/innodb_buffer_pool_pages_misc").intValue();
-             int pages_dirty = existing.get("status/innodb_buffer_pool_pages_dirty").intValue();
-             int pages_free = existing.get("status/innodb_buffer_pool_pages_free").intValue();
-
-             derived.put("newrelic/innodb_buffer_pool_pages_clean",  pages_data - pages_dirty);
-             derived.put("newrelic/innodb_buffer_pool_pages_dirty",  pages_dirty);
-             derived.put("newrelic/innodb_buffer_pool_pages_misc",   pages_misc);
-             derived.put("newrelic/innodb_buffer_pool_pages_free",   pages_free);
-             derived.put("newrelic/innodb_buffer_pool_pages_unassigned",   pages_total - pages_data - pages_free - pages_misc);
-
-         } catch (Exception e) {
-             logger.severe("An error occured calculating InnoDB metrics " + e.getMessage());
-         }
-
-         try {															// Catch any number conversion problems
-
-            /* Query Cache */
-             float qc_hits = existing.get("status/qcache_hits").floatValue();
-             float reads   = existing.get("status/com_select").floatValue();
-             float free    = existing.get("status/qcache_free_blocks").floatValue();
-             float total   = existing.get("status/qcache_total_blocks").floatValue();
-
-             derived.put("newrelic/query_cache_hits", (int)qc_hits);
-             derived.put("newrelic/query_cache_misses", existing.get("status/qcache_inserts").intValue());
-             derived.put("newrelic/query_cache_not_cached", existing.get("status/qcache_not_cached").intValue());
-
-             derived.put("newrelic/pct_query_cache_hit_utilization", (qc_hits / (qc_hits + reads))* 100.0);
-             derived.put("newrelic/pct_query_cache_memory_in_use",   100 - ((free/total)* 100.0));
-
-         } catch (Exception e) {
-             logger.severe("An error occured calculating Query Cache Metrics " + e.getMessage());
-         }
-
-         try {															// Catch any number conversion problems
-             float tmp_tables = existing.get("status/created_tmp_tables").floatValue();
-             float tmp_tables_disk = existing.get("status/created_tmp_disk_tables").floatValue();
-
-             derived.put("newrelic/pct_tmp_tables_written_to_disk", (tmp_tables_disk/tmp_tables)* 100.0);
-
-         } catch (Exception e) {
-             logger.severe("An error occured calculating Temporary Table metrics " + e.getMessage());
-         }
-        // Catch any number conversion problems
-        try {
-            /* Replication specifics */
-            // "slave" category is a pre-requisite for these metrics
-            if (metrics.contains("slave" + COMMA)) {
-                if (existing.containsKey("slave/seconds_behind_master")) {
-                    derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
-                }
-
-                if (existing.containsKey("slave/slave_io_running") && existing.containsKey("slave/slave_sql_running")) {
-                    int slave_io_thread_running  = existing.get("slave/slave_io_running").intValue();
-                    int slave_sql_thread_running = existing.get("slave/slave_sql_running").intValue();
-
-                    /* both need to be YES, which is 1 */
-                    int replication_status = 1;                             // Default as in ERROR
-                    if (slave_io_thread_running + slave_sql_thread_running == 2)
-                        replication_status = 0;
-                    derived.put("newrelic/replication_status", replication_status);
-                }
-
-                if (existing.containsKey("slave/relay_log_pos")) {
-                    derived.put("newrelic/slave_relay_log_bytes", existing.get("slave/relay_log_pos").intValue());
-                }
-
-                if (existing.containsKey("slave/read_master_log_pos") && existing.containsKey("slave/exec_master_log_pos")) {
-                    derived.put("newrelic/master_log_lag_bytes", existing.get("slave/read_master_log_pos").intValue() -  existing.get("slave/exec_master_log_pos").intValue());
-                }
-            } else {// This is a hack because the NR UI can't handle it missing for graphs
-                derived.put("newrelic/replication_lag",    0);
-                derived.put("newrelic/replication_status", 0);
-                derived.put("newrelic/slave_relay_log_bytes", 0);
-                derived.put("newrelic/master_log_lag_bytes", 0);
+        /* Replication specifics */
+        // "slave" category is a pre-requisite for these metrics
+        if (metrics.contains("slave" + COMMA)) {
+            if (areRequiredMetricsPresent("newrelic/replication_lag", existing, "slave/seconds_behind_master")) {
+                derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
             }
-        } catch (Exception e) {
-            logger.severe("An error occured calculating Replication Metrics " + e.getMessage());
+
+            if (areRequiredMetricsPresent("newrelic/replication_status", existing, "slave/slave_io_running", "slave/slave_sql_running")) {
+                int slave_io_thread_running  = existing.get("slave/slave_io_running").intValue();
+                int slave_sql_thread_running = existing.get("slave/slave_sql_running").intValue();
+
+                /* both need to be YES, which is 1 */
+                int replication_status = 1;                             // Default as in ERROR
+                if (slave_io_thread_running + slave_sql_thread_running == 2) {
+                    replication_status = 0;
+                }
+
+                derived.put("newrelic/replication_status", replication_status);
+            }
+
+            if (areRequiredMetricsPresent("newrelic/slave_relay_log_bytes", existing, "slave/relay_log_pos")) {
+                derived.put("newrelic/slave_relay_log_bytes", existing.get("slave/relay_log_pos").intValue());
+            }
+
+            if (areRequiredMetricsPresent("newrelic/master_log_lag_bytes", existing, "slave/read_master_log_pos", "slave/exec_master_log_pos")) {
+                derived.put("newrelic/master_log_lag_bytes", existing.get("slave/read_master_log_pos").intValue() -  existing.get("slave/exec_master_log_pos").intValue());
+            }
+        } else {// This is a hack because the NR UI can't handle it missing for graphs
+            derived.put("newrelic/replication_lag",    0);
+            derived.put("newrelic/replication_status", 0);
+            derived.put("newrelic/slave_relay_log_bytes", 0);
+            derived.put("newrelic/master_log_lag_bytes", 0);
         }
 
         return derived;
@@ -484,7 +469,28 @@ public class MySQLAgent extends Agent {
         if (key.startsWith("innodb_mutex/") && !metricsMeta.containsKey(key)) {								// This is a catch all for dynamic name metrics
             addMetricMeta(key, new MetricMeta(true, "Operations/Second"));
         }
-         return (MetricMeta)metricsMeta.get(key.toLowerCase());				// Look for existing meta data on metric
+
+        return (MetricMeta)metricsMeta.get(key.toLowerCase());				// Look for existing meta data on metric
+    }
+
+    /**
+     * Private utility function to validate that all required data is present for constructing atomic metrics
+     * @param map - the map of available data points
+     * @param keys - keys that are expected to be present for this operation
+     * @return true if all expected keys are present, otherwise false
+     */
+    private boolean areRequiredMetricsPresent(String category, Map<String, Number> map, String...keys) {
+        for(String key : keys) {
+            if(!map.containsKey(key)) {
+                if(firstReport) { // Only report missing category data on the first run so as not to clutter the log
+                    logger.finest("Not reporting on '" + category + "' due to missing data field '" + key + "'");
+                }
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
