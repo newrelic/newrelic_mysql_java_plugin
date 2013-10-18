@@ -475,6 +475,7 @@ public class MySQLAgent extends Agent {
 
     /**
      * Private utility function to validate that all required data is present for constructing atomic metrics
+     * @param category - a display name for which metric category will not be included if a given key is not present
      * @param map - the map of available data points
      * @param keys - keys that are expected to be present for this operation
      * @return true if all expected keys are present, otherwise false
