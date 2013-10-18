@@ -41,14 +41,14 @@ public class TestMySQLAgent {
         MySQLAgent agent = new MySQLAgent("test",
                                           MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
                                           metrics, new HashMap<String,Object>());
-        
+
         Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results,metrics);
         assertNotNull(newRelicMetrics);
         assertEquals(2,newRelicMetrics.size());
         assertEquals(3,newRelicMetrics.get("newrelic/reads"));
         assertEquals(1020,newRelicMetrics.get("newrelic/writes"));
     }
-    
+
     @Test
     public void testExpresssions() {
         Map<String, Number> existing = new HashMap<String, Number>();
@@ -64,59 +64,59 @@ public class TestMySQLAgent {
         assertEquals(40.0, (threads_running / threads_connected) * 100.0 , 0.0001);
         assertEquals(4, (int)threads_running);
     }
-    
+
     @Test
     public void testMutexMetricReporting() throws InterruptedException {
-        
+
         Map<String, Number> results = new HashMap<String, Number>();
         results.put("status/qcache_free_memory", 10);
         results.put("innodb_mutex/log0log.c:832", 460);
         results.put("innodb_mutex/combined buf0buf.c:916", 471);
-        
+
         String metrics="status,newrelic,innodb_mutex";
         MetricTrackerMySQLAgent agent = new MetricTrackerMySQLAgent("mutex_test",
                 MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
                 metrics, new HashMap<String,Object>());
-        
+
         agent.reportMetrics(results);
-        
+
         // assert reported metrics only contain status/com_select
         assertTrue(agent.reportedMetrics.size() == 3);
         assertNotNull(agent.reportedMetrics.get("status/qcache_free_memory"));
         assertNull(agent.reportedMetrics.get("innodb_mutex/log0log.c:832"));
         assertNull(agent.reportedMetrics.get("innodb_mutex/combined buf0buf.c:916"));
-        
+
         // create new results with one mutex updated value
         Map<String, Number> newResults = new HashMap<String, Number>();
         newResults.put("status/qcache_free_memory", 15);
         newResults.put("innodb_mutex/log0log.c:832", 460);
         newResults.put("innodb_mutex/combined buf0buf.c:916", 480);
-        
+
         TimeUnit.SECONDS.sleep(1);
-        
+
         // report new results
         agent.reportMetrics(newResults);
-        
+
         // assert mutex metrics are not null -- the exact metric value is variable and determined by epoch counter timing
         assertTrue(agent.reportedMetrics.size() == 3);
         assertNotNull(agent.reportedMetrics.get("status/qcache_free_memory"));
         assertNotNull(agent.reportedMetrics.get("innodb_mutex/log0log.c:832"));
         assertNotNull(agent.reportedMetrics.get("innodb_mutex/combined buf0buf.c:916"));
     }
-    
+
     /**
      * mysql agent for tracking reported metrics to aid testing
      */
     private static class MetricTrackerMySQLAgent extends MySQLAgent {
 
         Map<String, Number> reportedMetrics = new HashMap<String, Number>();
-        
+
         public MetricTrackerMySQLAgent(String name, String host, String user,
                 String passwd, String properties, String metrics,
                 Map<String, Object> metricCategories) {
             super(name, host, user, passwd, properties, metrics, metricCategories);
         }
-        
+
         /**
          * capture reported metrics for testing
          */
@@ -124,6 +124,6 @@ public class TestMySQLAgent {
         public void reportMetric(String metricName, String units, Number value) {
             reportedMetrics.put(metricName, value);
         }
-        
+
     }
 }
