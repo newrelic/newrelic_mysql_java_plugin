@@ -25,7 +25,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
     private static final String GUID = "com.newrelic.plugins.mysql.instance";
-    private static final String version = "1.0.7";
+    private static final String version = "1.0.8";
 
     public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
     public static final String AGENT_DEFAULT_USER = "newrelic";
@@ -113,7 +113,7 @@ public class MySQLAgent extends Agent {
         Connection c = m.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
         if (c == null) return;											// Unable to continue without a valid database connection
 
-         logger.fine("Gathering MySQL metrics. " + getAgentInfo());
+        logger.fine("Gathering MySQL metrics. " + getAgentInfo());
         Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics
         reportMetrics(results);											// Report Metrics to New Relic
         firstReport = false;
@@ -295,33 +295,34 @@ public class MySQLAgent extends Agent {
      */
     public void reportMetrics(Map<String,Number> results) {
         int count = 0;
-         logger.fine("Collected " + results.size() + " MySQL metrics. " + getAgentInfo());
-         logger.finest(results.toString());
+        logger.fine("Collected " + results.size() + " MySQL metrics. " + getAgentInfo());
+        logger.finest(results.toString());
 
-         Iterator<String> iter = results.keySet().iterator();
-         while (iter.hasNext()) {										// Iterate over current metrics
-             String key = (String)iter.next().toLowerCase();
-             Number val = results.get(key);
-             MetricMeta md = getMetricMeta(key);
-             if (md != null) {											// Metric Meta data exists (from metric.category.json)
-                 logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
-                 count++;
+        Iterator<String> iter = results.keySet().iterator();
+        while (iter.hasNext()) {										// Iterate over current metrics
+            String key = (String)iter.next().toLowerCase();
+            Number val = results.get(key);
+            MetricMeta md = getMetricMeta(key);
+            if (md != null) {											// Metric Meta data exists (from metric.category.json)
+                logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
+                count++;
 
-                 if (md.isCounter()) {										// Metric is a counter
-                        reportMetric(key , md.getUnit(), md.getCounter().process(val));
+                if (md.isCounter()) {										// Metric is a counter
+                    reportMetric(key , md.getUnit(), md.getCounter().process(val));
                 } else {													// Metric is a fixed Number
                     if (java.lang.Float.class.equals(results.get(key).getClass())) {
                         reportMetric(key, md.getUnit(), val.floatValue()); 	// We are working with a float value
-                     } else {
-                         reportMetric(key , md.getUnit(), val.intValue());	// We are working with an int
-                     }
-                 }
-             } else { // md != null
-                 if (firstReport)											// Provide some feedback of available metrics for future reporting
-                     logger.fine("Not reporting identified metric " + key);
-             }
-         }
-         logger.fine("Reported to New Relic " + count + " metrics. " + getAgentInfo());
+                    } else {
+                        reportMetric(key , md.getUnit(), val.intValue());	// We are working with an int
+                    }
+                }
+            } else { // md != null
+                if (firstReport) {											// Provide some feedback of available metrics for future reporting
+                    logger.fine("Not reporting identified metric " + key);
+                }
+            }
+        }
+        logger.fine("Reported to New Relic " + count + " metrics. " + getAgentInfo());
     }
 
     private String getAgentInfo() {
