@@ -67,13 +67,14 @@
     </target>
 
     <target name="dist" depends="jar" description="create a downloadable file">
-       <mkdir dir="${build.tar.src.dir}"/>
-       <copy todir="${build.tar.src.dir}/config">
-        <fileset dir="${conf.dir}"/>
-       </copy>
-      <copy file="CATEGORIES.TXT" todir="${build.tar.src.dir}" />
-        <copy file="LICENSE" todir="${build.tar.src.dir}" />
-      <copy file="MYSQL.TXT" todir="${build.tar.src.dir}" />
+        <mkdir dir="${build.tar.src.dir}"/>
+        <copy file="${conf.dir}/example_logging.properties" todir="${build.tar.src.dir}/config" />
+        <copy file="${conf.dir}/metric.category.json" todir="${build.tar.src.dir}/config" />
+        <copy file="${conf.dir}/template_mysql.instance.json" todir="${build.tar.src.dir}/config" />
+        <copy file="${conf.dir}/template_newrelic.properties" todir="${build.tar.src.dir}/config" />
+        <copy file="CATEGORIES.TXT" todir="${build.tar.src.dir}" />
+            <copy file="LICENSE" todir="${build.tar.src.dir}" />
+        <copy file="MYSQL.TXT" todir="${build.tar.src.dir}" />
         <copy file="README.md" todir="${build.tar.src.dir}" />
         <copy todir="${build.tar.src.dir}">
             <fileset dir="${script.dir}" />
