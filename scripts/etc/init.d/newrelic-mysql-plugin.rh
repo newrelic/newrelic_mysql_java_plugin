@@ -67,7 +67,7 @@ case "$1" in
 	stop
 	;;
   status)
-	status $prog
+	status $prog -p ${PID_FILE}
 	;;
   restart|force-reload)
 	stop
