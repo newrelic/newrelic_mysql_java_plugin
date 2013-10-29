@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="newrelic_mysql_extension" default="dist" basedir=".">
 
-    <property name="version" value="1.0.8"/>
+    <property name="version" value="1.0.9"/>
     <property name="filename" value="newrelic_mysql_plugin-${version}"/>
     <property name="jarfile" value="${filename}.jar"/>
     <property name="tarfile" value="${filename}.tar.gz"/>
@@ -18,7 +18,7 @@
     <property name="conf.dir" location="config"/>
     <property name="script.dir" location="scripts"/>
 
-    <property name="platform-metrics-java" value="${lib.dir}/metrics_publish-1.1.2.jar"/>
+    <property name="platform-metrics-java" value="${lib.dir}/metrics_publish-1.2.0.jar"/>
     <property name="mysql-connector" value="${lib.dir}/mysql-connector-java-5.1.24-bin.jar"/>
 
     <path id="classpath">
