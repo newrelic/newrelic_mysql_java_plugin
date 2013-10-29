@@ -67,14 +67,14 @@ case "$1" in
 	stop
 	;;
   status)
-	status $prog
+	status $PROGRAM
 	;;
   restart|force-reload)
 	stop
 	start
 	;;
   try-restart|condrestart)
-	if status $prog > /dev/null; then
+	if status $PROGRAM > /dev/null; then
 	    stop
 	    start
 	fi
