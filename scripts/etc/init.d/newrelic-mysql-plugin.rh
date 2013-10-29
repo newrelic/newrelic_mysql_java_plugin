@@ -54,7 +54,7 @@ stop() {
         kill -9 ${PID} > /dev/null 2>&1
 	RETVAL=$?
         echo
-	[ $RETVAL -eq 0 ] && rm -f ${LOCK_FILE}
+	[ $RETVAL -eq 0 ] && rm -f ${LOCK_FILE} ${PID_FILE}
 	return $RETVAL
 }
 
@@ -67,14 +67,14 @@ case "$1" in
 	stop
 	;;
   status)
-	status $prog
+	status $PROGRAM
 	;;
   restart|force-reload)
 	stop
 	start
 	;;
   try-restart|condrestart)
-	if status $prog > /dev/null; then
+	if status $PROGRAM > /dev/null; then
 	    stop
 	    start
 	fi
