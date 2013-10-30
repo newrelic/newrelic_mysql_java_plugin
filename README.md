@@ -101,6 +101,10 @@ You can use services like these to manage this process.
 - [Runit](http://smarden.org/runit/)
 - [Monit](http://mmonit.com/monit/)
 
+### Debian init script configuration
+The debian init script will import environment variables from /etc/default/newrelic-mysql-plugin
+
+Set the DAEMONDIR variable to the directory where you have installed the agent
 ## For support
 Plugin support and troubleshooting assistance can be obtained by visiting [support.newrelic.com](https://support.newrelic.com)
 

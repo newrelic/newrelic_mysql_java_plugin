@@ -25,15 +25,15 @@ SCRIPTNAME=/etc/init.d/$NAME
 JAVA=/usr/bin/java
 DAEMONDIR=/path/to/plugins
 
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
 # Exit if the package is not installed
 if test ! -x $JAVA -o ! -e $DAEMONDIR/$DAEMON 
 then
     echo $JAVA or $DAEMONDIR/$DAEMON do not exist
     exit 0
 fi
-
-# Read configuration variable file if it is present
-[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
