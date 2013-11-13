@@ -23,6 +23,7 @@ DAEMON_ARGS=""
 PIDFILE=/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 JAVA=/usr/bin/java
+DAEMON_USER=nobody
 DAEMONDIR=/path/to/plugins
 
 # Read configuration variable file if it is present
@@ -48,7 +49,7 @@ do_start() {
 
     log_daemon_msg "Starting $DESC: "
     # add this if you need to log the output: --no-close
-    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR/$DAEMON
+    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chuid $DAEMON_USER --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR/$DAEMON
     # append this to the above line if you need to log the output:  > /var/log/newrelic-plugin.log 2>&1
     log_end_msg $?
 }
