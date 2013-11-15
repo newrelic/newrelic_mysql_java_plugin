@@ -1,5 +1,7 @@
 package com.newrelic.plugins.mysql.instance;
 
+import static com.newrelic.plugins.mysql.util.Constants.*;
+
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,8 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
-
+import java.util.logging.Level;
 
 import com.newrelic.metrics.publish.Agent;
 import com.newrelic.metrics.publish.binding.Context;
@@ -25,7 +26,7 @@ import com.newrelic.plugins.mysql.MySQL;
  */
 public class MySQLAgent extends Agent {
     private static final String GUID = "com.newrelic.plugins.mysql.instance";
-    private static final String version = "1.0.9";
+    private static final String version = "1.1.0";
 
     public static final String AGENT_DEFAULT_HOST = "localhost";		// Default values for MySQL Agent
     public static final String AGENT_DEFAULT_USER = "newrelic";
@@ -36,24 +37,21 @@ public class MySQLAgent extends Agent {
     public static final String AGENT_CONFIG_FILE = "mysql.instance.json";
     public static final String CATEGORY_CONFIG_FILE = "metric.category.json";
 
-    public static final String COMMA = ",";
-
     private String name;												// Agent Name
 
     private String host;												// MySQL Connection parameters
     private String user;
     private String passwd;
     private String properties;
-
-    private String metrics;												// Metrics to be collected for this agent
+    private String agentInfo;
+    
+    private Set<String> metrics;
      private Map<String, MetricMeta> metricsMeta = 						// Definition of MySQL meta data (counter, unit, type etc)
              new HashMap<String, MetricMeta>();
      private Map<String, Object> metricCategories = 						// Definition of categories of metrics
              new HashMap<String, Object>();
 
      private MySQL m;													// Per agent MySQL Object
-
-    final Logger logger;												// Local convenience variable
 
     private boolean firstReport = true;
      /**
@@ -66,7 +64,7 @@ public class MySQLAgent extends Agent {
       * @param String MySQL user password
       * @param String CSVm List of metrics to be monitored
       */
-     public MySQLAgent(String name, String host, String user, String passwd, String properties, String metrics, Map<String, Object> metricCategories) {
+     public MySQLAgent(String name, String host, String user, String passwd, String properties, Set<String> metrics, Map<String, Object> metricCategories) {
            super(GUID, version);
 
            this.name = name;												// Set local attributes for new class object
@@ -74,16 +72,15 @@ public class MySQLAgent extends Agent {
            this.user = user;
            this.passwd = passwd;
            this.properties = properties;
-           this.metrics = metrics.toLowerCase();
+           
+           this.metrics = metrics;
            this.metricCategories = metricCategories;
 
            this.m = new MySQL();
 
-           logger = Context.getLogger();				    				// Set logging to current Context
-           MySQL.setLogger(logger);										// Push logger to MySQL Object
            createMetaData();												// Define incremental counters that are value/sec etc
 
-           logger.fine("MySQL Agent initialized: " + formatAgentParams(name, host, user, properties, metrics));
+           Context.log(Level.FINE, "MySQL Agent initialized: ", formatAgentParams(name, host, user, properties, metrics));
     }
 
      /**
@@ -95,7 +92,7 @@ public class MySQLAgent extends Agent {
       * @param metrics
       * @return A formatted String representing the Agent parameters
       */
-     private String formatAgentParams(String name, String host, String user, String properties, String metrics) {
+     private String formatAgentParams(String name, String host, String user, String properties, Set<String> metrics) {
          StringBuilder builder = new StringBuilder();
          builder.append("name: ").append(name).append(" | ");
          builder.append("host: ").append(host).append(" | ");
@@ -113,8 +110,9 @@ public class MySQLAgent extends Agent {
         Connection c = m.getConnection(host, user, passwd, properties);	// Get a database connection (which should be cached)
         if (c == null) return;											// Unable to continue without a valid database connection
 
-        logger.fine("Gathering MySQL metrics. " + getAgentInfo());
-        Map<String,Number> results = gatherMetrics(c, metrics);			// Gather defined metrics
+        Context.log(Level.FINE, "Gathering MySQL metrics. ", getAgentInfo());
+        
+        Map<String,Number> results = gatherMetrics(c);			// Gather defined metrics
         reportMetrics(results);											// Report Metrics to New Relic
         firstReport = false;
     }
@@ -127,21 +125,20 @@ public class MySQLAgent extends Agent {
      * @param String List of metrics to be obtained for this agent
      * @return Map of metrics and values
      */
-    private Map<String, Number> gatherMetrics(Connection c, String metrics) {
+    private Map<String, Number> gatherMetrics(Connection c) {
          Map<String,Number> results = new HashMap<String,Number>();		// Create an empty set of results
          Map<String,Object> categories = getMetricCategories(); 			// Get current Metric Categories
 
          Iterator<String> iter = categories.keySet().iterator();
-         metrics = metrics + COMMA;										// Add trailing comma for search criteria
          while (iter.hasNext()) {
              String category = (String)iter.next();
             @SuppressWarnings("unchecked")
             Map<String, String> attributes = (Map<String,String>)categories.get(category);
-             if (metrics.contains(category + COMMA)) {					// Use a dumb search, including comma to handle overlapping categories
-                 results.putAll(MySQL.runSQL(c, category, attributes.get("SQL"), attributes.get("result")));
+             if (isReportingForCategory(category)) {					// Use a dumb search, including comma to handle overlapping categories
+                 results.putAll(MySQL.runSQL(c, category, attributes.get(SQL), attributes.get(RESULT)));
              }
          }
-         results.putAll(newRelicMetrics(results, metrics));
+         results.putAll(newRelicMetrics(results));
          return results;
     }
 
@@ -153,13 +150,13 @@ public class MySQLAgent extends Agent {
      * @param metrics  String of the Metric Categories to capture
      * @return Map  Additional derived metrics
      */
-    protected Map<String, Number> newRelicMetrics(Map<String, Number> existing, String metrics) {
+    protected Map<String, Number> newRelicMetrics(Map<String, Number> existing) {
         Map<String, Number> derived = new HashMap<String,Number>();
 
-        if (!metrics.contains("newrelic" + COMMA)) return derived;		// Only calculate newrelic category if specified.
-        if (!metrics.contains("status" + COMMA))   return derived;		// "status" category is a pre-requisite for newrelic metrics
+        if (!isReportingForCategory(NEW_RELIC_CATEGORY)) return derived;		// Only calculate newrelic category if specified.
+        if (!isReportingForCategory(STATUS_CATEGORY))   return derived;		// "status" category is a pre-requisite for newrelic metrics
 
-        logger.fine("Adding New Relic derived metrics");
+        Context.log(Level.FINE, "Adding New Relic derived metrics");
 
         /* read and write volume */
         if(areRequiredMetricsPresent("Reads", existing, "status/com_select", "status/qcache_hits")) {
@@ -253,7 +250,7 @@ public class MySQLAgent extends Agent {
 
         /* Replication specifics */
         // "slave" category is a pre-requisite for these metrics
-        if (metrics.contains("slave" + COMMA)) {
+        if (isReportingForCategory("slave")) {
             if (areRequiredMetricsPresent("newrelic/replication_lag", existing, "slave/seconds_behind_master")) {
                 derived.put("newrelic/replication_lag", existing.get("slave/seconds_behind_master").intValue());
             }
@@ -295,8 +292,8 @@ public class MySQLAgent extends Agent {
      */
     public void reportMetrics(Map<String,Number> results) {
         int count = 0;
-        logger.fine("Collected " + results.size() + " MySQL metrics. " + getAgentInfo());
-        logger.finest(results.toString());
+        Context.log(Level.FINE, "Collected ", results.size(), " MySQL metrics. ", getAgentInfo());
+        Context.log(Level.FINEST, results);
 
         Iterator<String> iter = results.keySet().iterator();
         while (iter.hasNext()) {										// Iterate over current metrics
@@ -304,7 +301,7 @@ public class MySQLAgent extends Agent {
             Number val = results.get(key);
             MetricMeta md = getMetricMeta(key);
             if (md != null) {											// Metric Meta data exists (from metric.category.json)
-                logger.fine("Metric " + " " + key + "(" + md.getUnit() + ")=" + val + " " + (md.isCounter() ? "counter" : ""));
+                Context.log(Level.FINE, METRIC_LOG_PREFIX, key, SPACE, md, EQUALS, val);
                 count++;
 
                 if (md.isCounter()) {										// Metric is a counter
@@ -318,15 +315,27 @@ public class MySQLAgent extends Agent {
                 }
             } else { // md != null
                 if (firstReport) {											// Provide some feedback of available metrics for future reporting
-                    logger.fine("Not reporting identified metric " + key);
+                    Context.log(Level.FINE, "Not reporting identified metric ", key);
                 }
             }
         }
-        logger.fine("Reported to New Relic " + count + " metrics. " + getAgentInfo());
+        Context.log(Level.FINE, "Reported to New Relic ", count, " metrics. ", getAgentInfo());
+    }
+    
+    /**
+     * Is this agent reporting metrics for a specific category
+     * @param metricCategory
+     * @return boolean
+     */
+    boolean isReportingForCategory(String metricCategory) {
+        return metrics.contains(metricCategory);
     }
 
     private String getAgentInfo() {
-        return "Agent Name: " + name + ". Agent Version: " + version;
+        if (agentInfo == null) {
+            agentInfo = new StringBuilder().append("Agent Name: ").append(name).append(". Agent Version: ").append(version).toString();
+        }
+        return agentInfo;
     }
 
     /**
@@ -343,17 +352,17 @@ public class MySQLAgent extends Agent {
             Map<String, String> attributes = (Map<String,String>)categories.get(category);
             String valueMetrics = attributes.get("value_metrics");
             if (valueMetrics != null) {
-                Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
+                Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().replaceAll(SPACE, EMPTY_STRING).split(COMMA)));
                 for (String s: metrics) {
-                    addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(false));
+                    addMetricMeta(category + SEPARATOR + s, new MetricMeta(false));
                 }
 
             }
             String counterMetrics = attributes.get("counter_metrics");
             if (counterMetrics != null) {
-                Set<String> metrics = new HashSet<String>(Arrays.asList(counterMetrics.toLowerCase().replaceAll(" ", "").split(MySQLAgent.COMMA)));
+                Set<String> metrics = new HashSet<String>(Arrays.asList(counterMetrics.toLowerCase().replaceAll(SPACE, EMPTY_STRING).split(COMMA)));
                 for (String s: metrics) {
-                    addMetricMeta(category + MySQL.SEPARATOR + s, new MetricMeta(true));
+                    addMetricMeta(category + SEPARATOR + s, new MetricMeta(true));
                 }
             }
          }
@@ -467,7 +476,7 @@ public class MySQLAgent extends Agent {
      * @return MetridMeta  Structure of information about the metric
      */
     private MetricMeta getMetricMeta(String key) {
-        if (key.startsWith("innodb_mutex/") && !metricsMeta.containsKey(key)) {								// This is a catch all for dynamic name metrics
+        if (key.startsWith(INNODB_MUTEX_CATEGORY) && !metricsMeta.containsKey(key)) {								// This is a catch all for dynamic name metrics
             addMetricMeta(key, new MetricMeta(true, "Operations/Second"));
         }
 
@@ -485,7 +494,7 @@ public class MySQLAgent extends Agent {
         for(String key : keys) {
             if(!map.containsKey(key)) {
                 if(firstReport) { // Only report missing category data on the first run so as not to clutter the log
-                    logger.finest("Not reporting on '" + category + "' due to missing data field '" + key + "'");
+                    Context.log(Level.FINEST, "Not reporting on '", category, "' due to missing data field '", key, "'");
                 }
 
                 return false;
