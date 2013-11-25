@@ -1,8 +1,13 @@
 package com.newrelic.plugins.mysql.instance;
 
+import static com.newrelic.plugins.mysql.util.Constants.*;
+
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.logging.Logger;
+import java.util.Set;
+import java.util.logging.Level;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -20,6 +25,7 @@ import com.newrelic.metrics.publish.configuration.ConfigurationException;
  *
  */
 public class MySQLAgentFactory extends AgentFactory {
+    
     /**
      * Construct an Agent Factory based on the default properties file
      */
@@ -44,13 +50,13 @@ public class MySQLAgentFactory extends AgentFactory {
         /**
          * Use pre-defined defaults to simplify configuration
          */
-        if (host == null || "".equals(host)) host = MySQLAgent.AGENT_DEFAULT_HOST;
-        if (user == null || "".equals(user)) user = MySQLAgent.AGENT_DEFAULT_USER;
+        if (host == null || EMPTY_STRING.equals(host)) host = MySQLAgent.AGENT_DEFAULT_HOST;
+        if (user == null || EMPTY_STRING.equals(user)) user = MySQLAgent.AGENT_DEFAULT_USER;
         if (passwd == null) passwd = MySQLAgent.AGENT_DEFAULT_PASSWD;
-        if (conn_properties == null || "".equals(conn_properties)) conn_properties = MySQLAgent.AGENT_DEFAULT_PROPERTIES;
-        if (metrics == null || "".equals(metrics)) metrics = MySQLAgent.AGENT_DEFAULT_METRICS;
+        if (conn_properties == null || EMPTY_STRING.equals(conn_properties)) conn_properties = MySQLAgent.AGENT_DEFAULT_PROPERTIES;
+        if (metrics == null || EMPTY_STRING.equals(metrics)) metrics = MySQLAgent.AGENT_DEFAULT_METRICS;
 
-        return new MySQLAgent(name,host,user,passwd, conn_properties, metrics, readCategoryConfiguration());
+        return new MySQLAgent(name, host, user, passwd, conn_properties, processMetricCategories(metrics), readCategoryConfiguration());
     }
 
     /**
@@ -74,14 +80,21 @@ public class MySQLAgentFactory extends AgentFactory {
             }
 
         } catch (ConfigurationException e) {
-            throw logAndThrow(Context.getLogger(), "Error parsing config file " + filename);
+            throw logAndThrow("Error parsing config file " + filename);
         }
 
         return metricCategories;
     }
 
-    private ConfigurationException logAndThrow(Logger logger,String message) {
-        logger.severe(message);
+    private ConfigurationException logAndThrow(String message) {
+        Context.log(Level.SEVERE, message);
         return new ConfigurationException(message);
+    }
+    
+    Set<String> processMetricCategories(String metrics) {
+        String[] categories = metrics.toLowerCase().split(COMMA);
+        Set<String> set = new HashSet<String>(Arrays.asList(categories));
+        set.remove(EMPTY_STRING); // in case of trailing comma or two consecutive commas
+        return set;
     }
 }

@@ -1,5 +1,7 @@
 package com.newrelic.plugins.mysql;
 
+import static com.newrelic.plugins.mysql.util.Constants.*;
+
 import com.newrelic.metrics.publish.processors.EpochCounter;;
 
 /**
@@ -47,5 +49,15 @@ public class MetricMeta {
 
         public EpochCounter getCounter() {
             return this.counter;
+        }
+        
+        @Override
+        public String toString() {
+            return new StringBuilder()
+                .append(isCounter() ? COUNTER : EMPTY_STRING)
+                .append(LEFT_PAREN)
+                .append(getUnit())
+                .append(RIGHT_PAREN)
+                .toString();
         }
 }

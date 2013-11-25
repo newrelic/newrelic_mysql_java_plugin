@@ -1,13 +1,15 @@
 package com.newrelic.plugins.mysql.instance;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
@@ -37,12 +39,15 @@ public class TestMySQLAgent {
         results.put("status/com_replace",256);
         results.put("status/com_replace_select", 512);
 
-        String metrics="status,newrelic";
+        Set<String> metrics = new HashSet<String>();
+        metrics.add("status");
+        metrics.add("newrelic");
+        
         MySQLAgent agent = new MySQLAgent("test",
                                           MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
                                           metrics, new HashMap<String,Object>());
 
-        Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results,metrics);
+        Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results);
         assertNotNull(newRelicMetrics);
         assertEquals(2,newRelicMetrics.size());
         assertEquals(3,newRelicMetrics.get("newrelic/reads"));
@@ -73,7 +78,11 @@ public class TestMySQLAgent {
         results.put("innodb_mutex/log0log.c:832", 460);
         results.put("innodb_mutex/combined buf0buf.c:916", 471);
 
-        String metrics="status,newrelic,innodb_mutex";
+        Set<String> metrics = new HashSet<String>();
+        metrics.add("status");
+        metrics.add("newrelic");
+        metrics.add("innodb_mutex");
+        
         MetricTrackerMySQLAgent agent = new MetricTrackerMySQLAgent("mutex_test",
                 MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
                 metrics, new HashMap<String,Object>());
@@ -103,6 +112,23 @@ public class TestMySQLAgent {
         assertNotNull(agent.reportedMetrics.get("innodb_mutex/log0log.c:832"));
         assertNotNull(agent.reportedMetrics.get("innodb_mutex/combined buf0buf.c:916"));
     }
+    
+    @Test
+    public void testIsReportingForCategory() {
+        Set<String> metrics = new HashSet<String>();
+        metrics.add("status");
+        metrics.add("newrelic");
+        metrics.add("innodb_mutex");
+        
+        MySQLAgent agent = new MySQLAgent("test",
+                MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD, MySQLAgent.AGENT_DEFAULT_PROPERTIES,
+                metrics, new HashMap<String,Object>());
+        
+        assertTrue(agent.isReportingForCategory("status"));
+        assertTrue(agent.isReportingForCategory("newrelic"));
+        assertTrue(agent.isReportingForCategory("innodb_mutex"));
+        assertFalse(agent.isReportingForCategory("master"));   
+    }
 
     /**
      * mysql agent for tracking reported metrics to aid testing
@@ -112,7 +138,7 @@ public class TestMySQLAgent {
         Map<String, Number> reportedMetrics = new HashMap<String, Number>();
 
         public MetricTrackerMySQLAgent(String name, String host, String user,
-                String passwd, String properties, String metrics,
+                String passwd, String properties, Set<String> metrics,
                 Map<String, Object> metricCategories) {
             super(name, host, user, passwd, properties, metrics, metricCategories);
         }

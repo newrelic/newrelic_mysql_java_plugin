@@ -1,6 +1,7 @@
 package com.newrelic.plugins.mysql;
 
-import java.math.BigInteger;
+import static com.newrelic.plugins.mysql.util.Constants.*;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -8,12 +9,14 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
+import java.util.logging.Level;
+
+import com.newrelic.metrics.publish.binding.Context;
 
 /**
  * This class provide MySQL specific methods, operations and values for New Relic Agents
@@ -23,12 +26,7 @@ import java.util.regex.Pattern;
  *
  */
 public class MySQL {
-
-    public static final String SEPARATOR = "/";
-    private static final String PING = "/* ping */ SELECT 1";
-    private static final Pattern VALID_METRIC_PATTERN = Pattern.compile("(-)?(\\.)?\\d+(\\.\\d+)?");  // Only integers and floats are valid metric values
-
-    private static Logger logger = Logger.getAnonymousLogger();			// Local convenience variable
+    
     private  Connection conn = null;									// Cached Database Connection
     private boolean connectionInitialized = false;
 
@@ -45,10 +43,11 @@ public class MySQL {
      */
      private Connection getNewConnection(String host, String user, String passwd, String properties) {
         Connection newConn = null;
-        String dbURL="jdbc:mysql://" + host + "/" + properties;
-        String connectionInfo = dbURL + " " + user + "/PASSWORD_FILTERED";
+        String dbURL = buildString(JDBC_URL, host, SLASH, properties);
+        String connectionInfo = buildString(dbURL, SPACE, user, PASSWORD_FILTERED);
 
-        logger.fine("Getting new MySQL Connection: " + connectionInfo);
+        Context.log(Level.FINE, "Getting new MySQL Connection: ", connectionInfo);
+        
         try {
             if (!connectionInitialized) {
                 // load jdbc driver
@@ -57,10 +56,10 @@ public class MySQL {
             }
             newConn = DriverManager.getConnection(dbURL, user, passwd);
             if (newConn == null) {
-                logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings.");
+                Context.log(Level.SEVERE, "Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings.");
             }
         } catch (Exception e) {
-            logger.severe("Unable to obtain a new database connection: " + connectionInfo + ", check your MySQL configuration settings. " + e.getMessage());
+            Context.log(Level.SEVERE, "Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings. ", e.getMessage());
         }
         return newConn;
     }
@@ -97,19 +96,19 @@ public class MySQL {
             Statement stmt = null;
             ResultSet rs = null;
             try {
-                logger.fine("Checking connection - pinging MySQL server");
+                Context.log(Level.FINE, "Checking connection - pinging MySQL server");
                 stmt = conn.createStatement();
                 rs = stmt.executeQuery(PING);
                 available = true;
             } catch (SQLException e) {
-                logger.fine("The MySQL connection is not available.");
+                Context.log(Level.FINE, "The MySQL connection is not available.");
                 available = false;
             } finally {
                 try {
                     if (stmt != null) stmt.close();
                     if (rs != null) rs.close();
                 } catch (SQLException e) {
-                    logger.fine("Error closing statement/result set: " + e);
+                    Context.log(Level.FINE, "Error closing statement/result set: ", e);
                 }
                 rs = null;
                 stmt = null;
@@ -127,7 +126,7 @@ public class MySQL {
                 conn.close();
                 conn = null;
             } catch (SQLException e) {
-                logger.fine("Error closing connection: " + e);
+                Context.log(Level.FINE, "Error closing connection: ", e);
             }
         }
     }
@@ -150,47 +149,52 @@ public class MySQL {
 
 
         try {
-            logger.fine("Running SQL Statement " + SQL);
+            Context.log(Level.FINE, "Running SQL Statement ", SQL);
             stmt = c.createStatement();
-            rs = stmt.executeQuery(SQL);								// Execute the given SQL statement
-            ResultSetMetaData md = rs.getMetaData();					// Obtain Meta data about the SQL query (column names etc)
+            rs = stmt.executeQuery(SQL);                                // Execute the given SQL statement
+            ResultSetMetaData md = rs.getMetaData();                    // Obtain Meta data about the SQL query (column names etc)
 
-            if ("row".equals(type)) {									// If we expect a single row of results
+            if (ROW.equals(type)) {                                 // If we expect a single row of results
                 if (rs.next()) {
-                    for (int i=1; i <= md.getColumnCount();i++) {		// use column names as the "key"
-                        if (validMetricValue(rs.getString(i)))
-                            results.put(category + SEPARATOR + md.getColumnName(i).toLowerCase(),
-                                        translateStringToNumber(transformStringMetric(rs.getString(i))));
+                    for (int i=1; i <= md.getColumnCount();i++) {       // use column names as the "key"
+                        String value = transformStringMetric(rs.getString(i));
+                        String columnName = md.getColumnName(i).toLowerCase();
+                        if (validMetricValue(value)) {
+                            String key = buildString(category, SEPARATOR, columnName);
+                            results.put(key, translateStringToNumber(value));
+                        }
                         // rs.getString converts the string NULL into null
-                        if ("seconds_behind_master".equals(md.getColumnName(i).toLowerCase())) {
-                            if (rs.getString(i) == null) {
-                            results.put(category + SEPARATOR + md.getColumnName(i).toLowerCase(),
-                                    translateStringToNumber(transformStringMetric("NULL")));
+                        if (SECONDS_BEHIND_MASTER.equals(columnName)) {
+                            if (value == null) {
+                                String key = buildString(category, SEPARATOR, columnName);
+                                results.put(key, -1);
                             }
                         }
                     }
                 }
-            } else if ("set".equals(type)) {				            // This SQL statement return a key/value pair set of rows
-                if (md.getColumnCount() < 2) return results;			// If there are less than 2 columns, the resultset is incomplete
+            } else if (SET.equals(type)) {                          // This SQL statement return a key/value pair set of rows
+                if (md.getColumnCount() < 2) return results;            // If there are less than 2 columns, the resultset is incomplete
                 while (rs.next()) {
-                    if (validMetricValue(rs.getString(2)))
-                        results.put(category + SEPARATOR + rs.getString(1).toLowerCase(),
-                                    translateStringToNumber(transformStringMetric(rs.getString(2))));
-                } 														// If there are more than 2 columns, disregard additional columns
+                    String value = transformStringMetric(rs.getString(2));
+                    if (validMetricValue(value)) {
+                        String key = buildString(category, SEPARATOR, rs.getString(1).toLowerCase());
+                        results.put(key, translateStringToNumber(value));
+                    }
+                }                                                       // If there are more than 2 columns, disregard additional columns
 
-            } else if ("special".equals(type)) {						// These are per case bases SQL type commands with special needs
-                 if ("SHOW ENGINE INNODB MUTEX".equals(SQL)) {
+            } else if (SPECIAL.equals(type)) {                      // These are per case bases SQL type commands with special needs
+                 if (SHOW_ENGINE_INNODB_MUTEX.equals(SQL)) {
                      results.putAll(processInnodbMutex(rs, category));
-                } else if ("SHOW ENGINE INNODB STATUS".equals(SQL)) {
+                } else if (SHOW_ENGINE_INNODB_STATUS.equals(SQL)) {
                     results.putAll(processInnoDBStatus(rs, category));
                 }
             }
             return results;
         } catch (SQLException e) {
-            logger.severe("An SQL error occured running '" + SQL + "' " + e.getMessage());
+            Context.log(Level.SEVERE, "An SQL error occured running '", SQL, "' ", e.getMessage());
         } finally {
             try {
-                if (rs != null) rs.close();								// Release objects
+                if (rs != null) rs.close();                             // Release objects
                 if (stmt != null) stmt.close();
             } catch (SQLException e) {
                 ;
@@ -220,15 +224,15 @@ public class MySQL {
         Map<String, Number> mutexes = new HashMap<String,Number>();
 
         while (rs.next()) {
-            mutex=category + SEPARATOR + rs.getString(2).replaceAll("[&\\[\\]]", "").replaceAll("->", "_");
-            value=translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf("=") +1));
+            mutex = buildString(category, SEPARATOR, rs.getString(2).replaceAll(INNODB_MUTEX_REGEX, EMPTY_STRING).replaceAll(ARROW, UNDERSCORE));
+            value = translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf(EQUALS) +1));
             if (mutexes.containsKey(mutex)) {
-                logger.fine("appending " + value);
+                Context.log(Level.FINE, "appending ", value);
                 value = value.intValue() + mutexes.get(mutex).intValue();
             }
             mutexes.put(mutex, value);
         }
-        logger.fine(mutexes.toString());
+        Context.log(Level.FINE, "Mutexes: ", mutexes);
 
         return mutexes;
     }
@@ -242,37 +246,43 @@ public class MySQL {
      * @throws SQLException
      */
     public static Map<String, Number> processInnoDBStatus(ResultSet rs, String category) throws SQLException {
-           Map<String, Number> results = new HashMap<String,Number>();
-           String history="history list length";
-           String LSN = "log sequence number";
-           String checkpoint = "last checkpoint at ";
-           Number log_sequence_number = 0, last_checkpoint = 0;
-
-           if (!rs.next()) return results;
-        String status=rs.getString(3);
-        Set<String> lines = new HashSet<String>(Arrays.asList(status.toLowerCase().split("\n")));
-        logger.fine("Processing " + lines.size() + " of SHOW ENGINE INNODB STATUS");
-
+        if (!rs.next()) {
+            return Collections.emptyMap();
+        } else {
+            return processInnoDBStatus(rs.getString(3), category);
+        }
+    }
+    
+    static Map<String, Number> processInnoDBStatus(String status, String category) {
+        
+        Set<String> lines = new HashSet<String>(Arrays.asList(status.split(NEW_LINE)));
+        
+        Map<String, Number> results = new HashMap<String,Number>();
+        Number log_sequence_number = 0, last_checkpoint = 0;
+        
+        Context.log(Level.FINE, "Processing ", lines.size(), " of SHOW ENGINE INNODB STATUS");
+        
         for (String s: lines) {
-            if (s.startsWith(history)) {
-                results.put(category + SEPARATOR + "history_list_length", translateStringToNumber(s.substring(history.length()+1)));
+            if (s.startsWith(HISTORY_LIST_LENGTH)) {
+                results.put(buildString(category, SEPARATOR, HISTORY_LIST_LENGTH_METRIC), translateStringToNumber(s.substring(HISTORY_LIST_LENGTH.length()+1)));
             }
-            if (s.startsWith(LSN)) {
-                log_sequence_number=translateStringToNumber(s.substring(LSN.length()+1));
-                results.put(category + SEPARATOR + "log_sequence_number", log_sequence_number);
+            else if (s.startsWith(LOG_SEQUENCE_NUMBER)) {
+                log_sequence_number=translateStringToNumber(s.substring(LOG_SEQUENCE_NUMBER.length()+1));
+                results.put(buildString(category, SEPARATOR, LOG_SEQUENCE_NUMBER_METRIC), log_sequence_number);
             }
-            if (s.startsWith(checkpoint)) {
-                last_checkpoint = translateStringToNumber(s.substring(checkpoint.length()+1));
-                results.put(category + SEPARATOR + "last_checkpoint", last_checkpoint);
+            else if (s.startsWith(LAST_CHECKPOINT_AT)) {
+                last_checkpoint = translateStringToNumber(s.substring(LAST_CHECKPOINT_AT.length()+1));
+                results.put(buildString(category, SEPARATOR, LAST_CHECKPOINT_METRIC), last_checkpoint);
             }
-            if (s.matches(".* queries inside innodb.*")) {
-                results.put(category + SEPARATOR + "queries_inside_innodb", translateStringToNumber(s.replaceAll(" queries inside innodb.*", "")));
-                results.put(category + SEPARATOR + "queries_in_queue", translateStringToNumber(s.replaceAll(".* queries inside innodb, ", "").replaceAll(" queries in queue","")));
+            else if (QUERIES_INSIDE_INNODB_REGEX_PATTERN.matcher(s).matches()) {
+                results.put(buildString(category, SEPARATOR, QUERIES_INSIDE_INNODB_METRIC), translateStringToNumber(s.replaceAll(QUERIES_INSIDE_INNODB_REGEX2, EMPTY_STRING)));
+                results.put(buildString(category, SEPARATOR, QUERIES_IN_QUEUE), translateStringToNumber(s.replaceAll(QUERIES_IN_QUEUE_REGEX, EMPTY_STRING).replaceAll(QUERIES_IN_QUEUE_REGEX2, EMPTY_STRING)));
             }
         }
-        results.put(category + SEPARATOR + "checkpoint_age", log_sequence_number.intValue() - last_checkpoint.intValue());
-
-        logger.fine(results.toString());
+        results.put(buildString(category, SEPARATOR, CHECKPOINT_AGE_METRIC), log_sequence_number.intValue() - last_checkpoint.intValue());
+        
+        Context.log(Level.FINE, results);
+        
         return results;
     }
 
@@ -284,14 +294,12 @@ public class MySQL {
      */
     public static Number translateStringToNumber(String val) {
         try {
-            val = val.replaceAll(" ", "");									// Strip any spaces
-            if (val.matches("\\d*\\.\\d*")) {							// We are working with a float value
-                return (float)Float.parseFloat(val);
-             } else {
-                return new BigInteger(val);
-             }
+            if (val.contains(SPACE)) {
+                val = SPACE_PATTERN.matcher(val).replaceAll(EMPTY_STRING);  // Strip any spaces
+            }
+            return (float) Float.parseFloat(val);
         } catch (Exception e) {
-             logger.severe("Unable to parse int/float number from value " + val);
+            Context.log(Level.SEVERE, "Unable to parse int/float number from value ", val);
          }
         return 0;
     }
@@ -304,12 +312,11 @@ public class MySQL {
      * @return String value that best represents and integer
      */
     static String transformStringMetric(String val) {
-        val = val.toUpperCase();
-        if ("ON".equals(val)  || "TRUE".equals(val)) return "1";		// Convert some TEXT metrics into numerics
-        if ("OFF".equals(val) || "NONE".equals(val)) return "0";
-        if ("YES".equals(val))  return "1";								// For slave/slave_*_running
-        if ("NO".equals(val))   return "0";								// For slave/slave_*_running
-        if ("NULL".equals(val)) return "-1";							// For slave/seconds_behind_master
+        if (ON.equalsIgnoreCase(val)  || TRUE.equalsIgnoreCase(val)) return ONE;        // Convert some TEXT metrics into numerics
+        if (OFF.equalsIgnoreCase(val) || NONE.equalsIgnoreCase(val)) return ZERO;
+        if (YES.equalsIgnoreCase(val))  return ONE;                             // For slave/slave_*_running
+        if (NO.equalsIgnoreCase(val))   return ZERO;                                // For slave/slave_*_running
+        if (NULL.equalsIgnoreCase(val)) return NEG_ONE;                         // For slave/seconds_behind_master
         return val;
      }
 
@@ -320,19 +327,18 @@ public class MySQL {
       * @return TRUE if string is a numeric supported by New Relic
       */
      static boolean validMetricValue(String val) {
-         if (val == null || "".equals(val)) 								//  Empty string values are invalid
+         if (val == null || EMPTY_STRING.equals(val))                                //  Empty string values are invalid
              return false;
-        if (VALID_METRIC_PATTERN.matcher(transformStringMetric(val)).matches()) 			//  We can only process numerical metrics
-            return true;
-           return false;
+         if (VALID_METRIC_PATTERN.matcher(val).matches())            //  We can only process numerical metrics
+             return true;
+         return false;
      }
-
-    /**
-     * Set the System Logger for this class
-     *
-     * @param Logger
-     */
-    public static void setLogger(Logger _logger) {
-        logger = _logger;
-    }
+     
+     static String buildString(String... strings) {
+         StringBuilder builder = new StringBuilder(50);
+         for (String string : strings) {
+             builder.append(string);
+         }
+         return builder.toString();
+     }
 }
