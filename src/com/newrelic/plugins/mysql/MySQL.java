@@ -232,7 +232,7 @@ public class MySQL {
             }
             mutexes.put(mutex, value);
         }
-        Context.log(Level.FINE, mutexes);
+        Context.log(Level.FINE, "Mutexes: ", mutexes);
 
         return mutexes;
     }

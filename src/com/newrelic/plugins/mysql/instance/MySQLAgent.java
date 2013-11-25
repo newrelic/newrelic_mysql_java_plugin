@@ -134,7 +134,7 @@ public class MySQLAgent extends Agent {
              String category = (String)iter.next();
             @SuppressWarnings("unchecked")
             Map<String, String> attributes = (Map<String,String>)categories.get(category);
-             if (isReportingForCategory(category)) {					// Use a dumb search, including comma to handle overlapping categories
+             if (isReportingForCategory(category)) {
                  results.putAll(MySQL.runSQL(c, category, attributes.get(SQL), attributes.get(RESULT)));
              }
          }

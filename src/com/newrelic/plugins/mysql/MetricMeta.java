@@ -55,9 +55,9 @@ public class MetricMeta {
         public String toString() {
             return new StringBuilder()
                 .append(isCounter() ? COUNTER : EMPTY_STRING)
-                .append(LEFT_PARAN)
+                .append(LEFT_PAREN)
                 .append(getUnit())
-                .append(RIGHT_PARAN)
+                .append(RIGHT_PAREN)
                 .toString();
         }
 }

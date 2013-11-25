@@ -9,8 +9,8 @@ public class Constants {
     public static final String SPACE = " ";
     public static final String EMPTY_STRING = "";
     public static final String UNDERSCORE = "_";
-    public static final String LEFT_PARAN = "(";
-    public static final String RIGHT_PARAN = ")";
+    public static final String LEFT_PAREN = "(";
+    public static final String RIGHT_PAREN = ")";
     public static final String ARROW = "->";
     public static final String EQUALS = "=";
     public static final String NEW_LINE = "\n";
