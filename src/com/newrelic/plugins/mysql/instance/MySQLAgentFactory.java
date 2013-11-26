@@ -18,14 +18,14 @@ import com.newrelic.metrics.publish.binding.Context;
 import com.newrelic.metrics.publish.configuration.ConfigurationException;
 
 /**
- * This class produces the necessary Agents to perform
- * gathering and reporting metrics for the MySQL plugin
- *
+ * This class produces the necessary Agents to perform gathering and reporting
+ * metrics for the MySQL plugin
+ * 
  * @author Ronald Bradford me@ronaldbradford.com
- *
+ * 
  */
 public class MySQLAgentFactory extends AgentFactory {
-    
+
     /**
      * Construct an Agent Factory based on the default properties file
      */
@@ -34,9 +34,9 @@ public class MySQLAgentFactory extends AgentFactory {
     }
 
     /**
-     * Configure an agent based on an entry in the properties file.
-     * There may be multiple agents per Plugin
-     *
+     * Configure an agent based on an entry in the properties file. There may be
+     * multiple agents per Plugin
+     * 
      */
     @Override
     public Agent createConfiguredAgent(Map<String, Object> properties) throws ConfigurationException {
@@ -50,23 +50,34 @@ public class MySQLAgentFactory extends AgentFactory {
         /**
          * Use pre-defined defaults to simplify configuration
          */
-        if (host == null || EMPTY_STRING.equals(host)) host = MySQLAgent.AGENT_DEFAULT_HOST;
-        if (user == null || EMPTY_STRING.equals(user)) user = MySQLAgent.AGENT_DEFAULT_USER;
-        if (passwd == null) passwd = MySQLAgent.AGENT_DEFAULT_PASSWD;
-        if (conn_properties == null || EMPTY_STRING.equals(conn_properties)) conn_properties = MySQLAgent.AGENT_DEFAULT_PROPERTIES;
-        if (metrics == null || EMPTY_STRING.equals(metrics)) metrics = MySQLAgent.AGENT_DEFAULT_METRICS;
+        if (host == null || EMPTY_STRING.equals(host)) {
+            host = MySQLAgent.AGENT_DEFAULT_HOST;
+        }
+        if (user == null || EMPTY_STRING.equals(user)) {
+            user = MySQLAgent.AGENT_DEFAULT_USER;
+        }
+        if (passwd == null) {
+            passwd = MySQLAgent.AGENT_DEFAULT_PASSWD;
+        }
+        if (conn_properties == null || EMPTY_STRING.equals(conn_properties)) {
+            conn_properties = MySQLAgent.AGENT_DEFAULT_PROPERTIES;
+        }
+        if (metrics == null || EMPTY_STRING.equals(metrics)) {
+            metrics = MySQLAgent.AGENT_DEFAULT_METRICS;
+        }
 
-        return new MySQLAgent(name, host, user, passwd, conn_properties, processMetricCategories(metrics), readCategoryConfiguration());
+        return new MySQLAgent(name, host, user, passwd, conn_properties,
+                processMetricCategories(metrics), readCategoryConfiguration());
     }
 
     /**
-     * Read metric category information that enables the dynamic definition
-     * of MySQL metrics that can be collected.
-     *
-     * @return Map  Categories and the meta data about the categories
+     * Read metric category information that enables the dynamic definition of
+     * MySQL metrics that can be collected.
+     * 
+     * @return Map Categories and the meta data about the categories
      * @throws ConfigurationException
      */
-    public Map<String,Object> readCategoryConfiguration() throws ConfigurationException {
+    public Map<String, Object> readCategoryConfiguration() throws ConfigurationException {
         Map<String, Object> metricCategories = new HashMap<String, Object>();
 
         JSONArray json;
@@ -75,10 +86,9 @@ public class MySQLAgentFactory extends AgentFactory {
             json = readJSONFile(filename);
             for (int i = 0; i < json.size(); i++) {
                 JSONObject obj = (JSONObject) json.get(i);
-                String category = (String)obj.get("category");
+                String category = (String) obj.get("category");
                 metricCategories.put(category, obj);
             }
-
         } catch (ConfigurationException e) {
             throw logAndThrow("Error parsing config file " + filename);
         }
@@ -90,7 +100,7 @@ public class MySQLAgentFactory extends AgentFactory {
         Context.log(Level.SEVERE, message);
         return new ConfigurationException(message);
     }
-    
+
     Set<String> processMetricCategories(String metrics) {
         String[] categories = metrics.toLowerCase().split(COMMA);
         Set<String> set = new HashSet<String>(Arrays.asList(categories));
