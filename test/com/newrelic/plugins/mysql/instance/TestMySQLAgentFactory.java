@@ -21,9 +21,9 @@ import com.newrelic.metrics.publish.configuration.ConfigurationException;
 
 /**
  * All enabled tests pass on version 5.5 of MySQL.
- *
+ * 
  * @author Ronald Bradford me@ronaldbradford.com
- *
+ * 
  */
 public class TestMySQLAgentFactory {
 
@@ -41,21 +41,21 @@ public class TestMySQLAgentFactory {
         assertEquals(7, categories.size());
         Object status = categories.get("status");
         assertNotNull(status);
-        Map<String, String> map = (Map<String,String>)status;
+        Map<String, String> map = (Map<String, String>) status;
         assertEquals("SHOW GLOBAL STATUS", map.get("SQL"));
         assertEquals("set", map.get("result"));
 
         Object slave = categories.get("slave");
         assertNotNull(slave);
-        map = (Map<String,String>)slave;
+        map = (Map<String, String>) slave;
         assertEquals("SHOW SLAVE STATUS", map.get("SQL"));
-        assertEquals("row",map.get("result"));
+        assertEquals("row", map.get("result"));
 
         Object mutex = categories.get("innodb_mutex");
         assertNotNull(mutex);
-        map = (Map<String,String>)mutex;
+        map = (Map<String, String>) mutex;
         assertEquals("SHOW ENGINE INNODB MUTEX", map.get("SQL"));
-        assertEquals("special",map.get("result"));
+        assertEquals("special", map.get("result"));
 
         Object doesnotexist = categories.get("doesnotexist");
         assertNull(doesnotexist);
@@ -77,30 +77,30 @@ public class TestMySQLAgentFactory {
         Object status = categories.get("status");
         assertNotNull(status);
         @SuppressWarnings("unchecked")
-        Map<String, String> map = (Map<String,String>)status;
+        Map<String, String> map = (Map<String, String>) status;
         String valueMetrics = map.get("value_metrics");
         assertNotNull(valueMetrics);
         Set<String> metrics = new HashSet<String>(Arrays.asList(valueMetrics.toLowerCase().split(COMMA)));
-        assertEquals(19,metrics.size());
+        assertEquals(19, metrics.size());
         assertTrue(metrics.contains("uptime"));
         assertFalse(metrics.contains("com_select"));
         String counterMetrics = map.get("counter_metrics");
         assertNotNull(counterMetrics);
         metrics = new HashSet<String>(Arrays.asList(counterMetrics.toLowerCase().split(COMMA)));
-        assertEquals(196,metrics.size());
+        assertEquals(196, metrics.size());
 
     }
-    
+
     @Test
     public void testProcessMetricCategories() {
         String metrics = "status,newrelic,,innodb_mutex,";
         MySQLAgentFactory factory = new MySQLAgentFactory();
-        
+
         Set<String> categories = factory.processMetricCategories(metrics);
-        
+
         assertEquals(3, categories.size());
         assertTrue(categories.contains("status"));
         assertTrue(categories.contains("newrelic"));
-        assertTrue(categories.contains("innodb_mutex"));   
+        assertTrue(categories.contains("innodb_mutex"));
     }
 }
