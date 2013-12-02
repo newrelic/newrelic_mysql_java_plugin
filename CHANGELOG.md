@@ -1,10 +1,11 @@
 ## New Relic MySQL Java Plugin ##
 
-### v1.1.0 - Unreleased ###
+### v1.1.0 - December 2, 2013 ###
 
 **Features**
 
 * Added numerous improvements to memory and CPU performance
+* Updated README
 
 ### v1.0.9 - October 29, 2013 ###
 
