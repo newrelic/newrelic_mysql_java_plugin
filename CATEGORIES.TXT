@@ -39,5 +39,8 @@ Sample list of available metrics:
 * innodb_metrics      - innodb information metrics
 * innodb_mutex        - innodb mutex metrics
 
+Note: The innodb_mutex metric category can lead to increased memory usage for the plugin 
+if the monitored database is under a high level of contention (i.e. large numbers of active mutexes).
+
 Currently, the New Relic Platform does not allow for customized dashboards per user.
 In the future this feature will enable custom categories to be fully utilized.
