@@ -15,6 +15,8 @@ The MySQL plugin for New Relic requires the following:
 - A configured Java Runtime (JRE) environment Version 1.6 or better
 - Network access to New Relic (authenticated proxies are not currently supported, but see workaround below)
 
+**Note:** The MySQL Plugin includes the [Connector/J JDBC Driver](http://dev.mysql.com/usingmysql/java/) and it does not need to be installed separately.
+
 ## Download
 Download and unpack the [New Relic plugin for MySQL from Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
@@ -83,9 +85,18 @@ If your MySQL Server is bound to an externally visible IP address, set the 'host
 The MySQL Plugin is capable of reporting different sets of metrics by configuring the 'metrics' attribute. E.g., add the 'slave' category to report replication metrics. 
 *See [CATEGORIES.TXT](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/CATEGORIES.TXT) for more info.*
 
+**Note:** The `innodb_mutex` metric category can lead to increased memory usage for the plugin if the monitored database is under a high level of contention (i.e. large numbers of active mutexes).
+
 ## Running the agent
 To run the plugin from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
+
+**Note:** When running the plugin on a server class machine, the `java` command will start a JVM that may reserve up to one quarter (25%) of available memory. To reduce the amount of reserved memory use the `-Xmx` JVM argument. Ex. `java -Xmx128m -jar newrelic_mysql_plugin*.jar`
+
+For more information on JVM server class machines and the `-Xmx` JVM argument, see: 
+
+ - [http://docs.oracle.com/javase/6/docs/technotes/guides/vm/server-class.html](http://docs.oracle.com/javase/6/docs/technotes/guides/vm/server-class.html)
+ - [http://docs.oracle.com/cd/E22289_01/html/821-1274/configuring-the-default-jvm-and-java-arguments.html](http://docs.oracle.com/cd/E22289_01/html/821-1274/configuring-the-default-jvm-and-java-arguments.html)
 
 If your host needs a proxy server to access the Internet, you can specify a proxy server & port: 
 `$ java -Dhttps.proxyHost=proxyhost -Dhttps.proxyPort=8080 -jar newrelic_mysql_plugin*.jar`
