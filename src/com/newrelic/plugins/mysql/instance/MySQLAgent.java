@@ -188,11 +188,11 @@ public class MySQLAgent extends Agent {
 
         /* Connection management */
         if (areRequiredMetricsPresent("Connection Management", existing, "status/threads_connected", "status/threads_running", "status/threads_cached")) {
-            int threads_connected = existing.get("status/threads_connected").intValue();
-            int threads_running = existing.get("status/threads_running").intValue();
+            Float threads_connected = existing.get("status/threads_connected");
+            Float threads_running = existing.get("status/threads_running");
 
-            derived.put("newrelic/connections_connected", (float) threads_connected);
-            derived.put("newrelic/connections_running", (float) threads_running);
+            derived.put("newrelic/connections_connected", threads_connected);
+            derived.put("newrelic/connections_running", threads_running);
             derived.put("newrelic/connections_cached", existing.get("status/threads_cached"));
             
             Float pct_connection_utilization = 0.0f;
