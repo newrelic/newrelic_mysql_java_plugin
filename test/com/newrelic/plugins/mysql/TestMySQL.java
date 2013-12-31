@@ -117,7 +117,7 @@ public class TestMySQL {
         Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD,
                 MySQLAgent.AGENT_DEFAULT_PROPERTIES);
         assertNotNull(c);
-        Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'", "set");
+        Map<String, Float> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Com_xa_rollback'", "set");
         assertEquals(1, results.size());
         assertEquals(0, results.get("status/com_xa_rollback").intValue()); // A status likely to never have a value
     }
@@ -127,7 +127,7 @@ public class TestMySQL {
         Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD,
                 MySQLAgent.AGENT_DEFAULT_PROPERTIES);
         assertNotNull(c);
-        Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'", "set");
+        Map<String, Float> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Uptime'", "set");
         assertEquals(1, results.size());
         assertTrue(results.get("status/uptime").intValue() > 0); // A status that will always be > 0
     }
@@ -138,7 +138,7 @@ public class TestMySQL {
         Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD,
                 MySQLAgent.AGENT_DEFAULT_PROPERTIES);
         assertNotNull(c);
-        Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'", "set");
+        Map<String, Float> results = MySQL.runSQL(c, "status", "SHOW GLOBAL VARIABLES LIKE 'version'", "set");
         assertEquals(0, results.size()); // This is removed because value is a string
     }
 
@@ -147,7 +147,7 @@ public class TestMySQL {
         Connection c = new MySQL().getConnection(MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD,
                 MySQLAgent.AGENT_DEFAULT_PROPERTIES);
         assertNotNull(c);
-        Map<String, Number> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'", "set");
+        Map<String, Float> results = MySQL.runSQL(c, "status", "SHOW GLOBAL STATUS LIKE 'Compression'", "set");
         assertEquals(1, results.size());
         assertEquals(0, results.get("status/compression").intValue()); //Translated from OFF
     }
@@ -165,7 +165,7 @@ public class TestMySQL {
     public void runTranslateStringToNumber() {
         assertEquals(5, MySQL.translateStringToNumber("5").intValue());
         assertEquals(java.lang.Float.class, MySQL.translateStringToNumber("5").getClass());
-        assertEquals(5.0f, MySQL.translateStringToNumber("5.0"));
+        assertEquals(5.0f, MySQL.translateStringToNumber("5.0"), 0.0001f);
         assertEquals(java.lang.Float.class, MySQL.translateStringToNumber("5.0").getClass());
         Float x = new Float("37107795968");
         assertEquals(x, MySQL.translateStringToNumber("37107795968"));
@@ -191,7 +191,7 @@ public class TestMySQL {
         assertNotNull(c);
         Statement stmt = c.createStatement();
         String SQL = "SHOW ENGINE INNODB STATUS";
-        Map<String, Number> results = MySQL.processInnoDBStatus(stmt.executeQuery(SQL), "innodb_status");
+        Map<String, Float> results = MySQL.processInnoDBStatus(stmt.executeQuery(SQL), "innodb_status");
         assertEquals(3, results.size());
         assertNotNull(results.get("innodb_status/history_list_length"));
 
@@ -204,14 +204,14 @@ public class TestMySQL {
 
     @Test
     public void testProcessInnoDBStatus() {
-        Map<String, Number> results = MySQL.processInnoDBStatus(INNODB_STATUS, "test");
+        Map<String, Float> results = MySQL.processInnoDBStatus(INNODB_STATUS, "test");
 
-        assertEquals(1096f, results.get("test/history_list_length"));
-        assertEquals(11727772890f, results.get("test/log_sequence_number"));
-        assertEquals(11727772890f, results.get("test/last_checkpoint"));
-        assertEquals(0f, results.get("test/queries_inside_innodb"));
-        assertEquals(0f, results.get("test/queries_in_queue"));
-        assertEquals(0, results.get("test/checkpoint_age"));
+        assertEquals(1096f, results.get("test/history_list_length"), 0.0001f);
+        assertEquals(11727772890f, results.get("test/log_sequence_number"), 0.0001f);
+        assertEquals(11727772890f, results.get("test/last_checkpoint"), 0.0001f);
+        assertEquals(0f, results.get("test/queries_inside_innodb"), 0.0001f);
+        assertEquals(0f, results.get("test/queries_in_queue"), 0.0001f);
+        assertEquals(0, results.get("test/checkpoint_age"), 0.0001f);
     }
 
     @Test

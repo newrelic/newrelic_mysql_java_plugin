@@ -1,5 +1,11 @@
 ## New Relic MySQL Java Plugin ##
 
+### v1.2.0 - December 31, 2013 ###
+
+**Bug Fixes**
+
+* Fixed integer narrowing for reported metrics
+
 ### v1.1.0 - December 2, 2013 ###
 
 **Features**
