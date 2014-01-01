@@ -143,10 +143,10 @@ public class MySQL {
      * @param SQL String of SQL Statement to execute
      * @return Map of key/value pairs
      */
-    public static Map<String, Number> runSQL(Connection c, String category, String SQL, String type) {
+    public static Map<String, Float> runSQL(Connection c, String category, String SQL, String type) {
         Statement stmt = null;
         ResultSet rs = null;
-        Map<String, Number> results = new HashMap<String, Number>();
+        Map<String, Float> results = new HashMap<String, Float>();
 
         try {
             Context.log(Level.FINE, "Running SQL Statement ", SQL);
@@ -167,7 +167,7 @@ public class MySQL {
                         if (SECONDS_BEHIND_MASTER.equals(columnName)) {
                             if (value == null) {
                                 String key = buildString(category, SEPARATOR, columnName);
-                                results.put(key, -1);
+                                results.put(key, -1.0f);
                             }
                         }
                     }
@@ -221,17 +221,17 @@ public class MySQL {
      * @return Map of metrics collated
      * @throws SQLException
      */
-    private static Map<String, Number> processInnodbMutex(ResultSet rs, String category) throws SQLException {
+    private static Map<String, Float> processInnodbMutex(ResultSet rs, String category) throws SQLException {
         String mutex;
-        Number value;
-        Map<String, Number> mutexes = new HashMap<String, Number>();
+        Float value;
+        Map<String, Float> mutexes = new HashMap<String, Float>();
 
         while (rs.next()) {
             mutex = buildString(category, SEPARATOR, rs.getString(2).replaceAll(INNODB_MUTEX_REGEX, EMPTY_STRING).replaceAll(ARROW, UNDERSCORE));
             value = translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf(EQUALS) + 1));
             if (mutexes.containsKey(mutex)) {
                 Context.log(Level.FINE, "appending ", value);
-                value = value.intValue() + mutexes.get(mutex).intValue();
+                value = value + mutexes.get(mutex);
             }
             mutexes.put(mutex, value);
         }
@@ -248,7 +248,7 @@ public class MySQL {
      * @return Map of metrics collected
      * @throws SQLException
      */
-    public static Map<String, Number> processInnoDBStatus(ResultSet rs, String category) throws SQLException {
+    public static Map<String, Float> processInnoDBStatus(ResultSet rs, String category) throws SQLException {
         if (!rs.next()) {
             return Collections.emptyMap();
         } else {
@@ -256,12 +256,12 @@ public class MySQL {
         }
     }
 
-    static Map<String, Number> processInnoDBStatus(String status, String category) {
+    static Map<String, Float> processInnoDBStatus(String status, String category) {
 
         Set<String> lines = new HashSet<String>(Arrays.asList(status.split(NEW_LINE)));
 
-        Map<String, Number> results = new HashMap<String, Number>();
-        Number log_sequence_number = 0, last_checkpoint = 0;
+        Map<String, Float> results = new HashMap<String, Float>();
+        Float log_sequence_number = 0.0f, last_checkpoint = 0.0f;
 
         Context.log(Level.FINE, "Processing ", lines.size(), " of SHOW ENGINE INNODB STATUS");
 
@@ -282,7 +282,7 @@ public class MySQL {
                         .replaceAll(QUERIES_IN_QUEUE_REGEX2, EMPTY_STRING)));
             }
         }
-        results.put(buildString(category, SEPARATOR, CHECKPOINT_AGE_METRIC), log_sequence_number.intValue() - last_checkpoint.intValue());
+        results.put(buildString(category, SEPARATOR, CHECKPOINT_AGE_METRIC), log_sequence_number - last_checkpoint);
 
         Context.log(Level.FINE, results);
 
@@ -295,16 +295,16 @@ public class MySQL {
      * @param String value to convert
      * @return Number A int or float representation of the provided string
      */
-    public static Number translateStringToNumber(String val) {
+    public static Float translateStringToNumber(String val) {
         try {
             if (val.contains(SPACE)) {
                 val = SPACE_PATTERN.matcher(val).replaceAll(EMPTY_STRING); // Strip any spaces
             }
-            return (float) Float.parseFloat(val);
+            return Float.parseFloat(val);
         } catch (Exception e) {
             Context.log(Level.SEVERE, "Unable to parse int/float number from value ", val);
         }
-        return 0;
+        return 0.0f;
     }
 
     /**

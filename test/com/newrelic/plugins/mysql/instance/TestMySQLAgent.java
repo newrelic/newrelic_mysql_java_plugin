@@ -26,18 +26,18 @@ public class TestMySQLAgent {
     @Ignore
     @Test
     public void verifyNewRelicMetrics() {
-        Map<String, Number> results = new HashMap<String, Number>();
+        Map<String, Float> results = new HashMap<String, Float>();
 
-        results.put("status/com_select", 1);
-        results.put("status/qcache_hits", 2);
-        results.put("status/com_insert", 4);
-        results.put("status/com_insert_select", 8);
-        results.put("status/com_update", 16);
-        results.put("status/com_update_multi", 32);
-        results.put("status/com_delete", 64);
-        results.put("status/com_delete_multi", 128);
-        results.put("status/com_replace", 256);
-        results.put("status/com_replace_select", 512);
+        results.put("status/com_select", 1.0f);
+        results.put("status/qcache_hits", 2.0f);
+        results.put("status/com_insert", 4.0f);
+        results.put("status/com_insert_select", 8.0f);
+        results.put("status/com_update", 16.0f);
+        results.put("status/com_update_multi", 32.0f);
+        results.put("status/com_delete", 64.0f);
+        results.put("status/com_delete_multi", 128.0f);
+        results.put("status/com_replace", 256.0f);
+        results.put("status/com_replace_select", 512.0f);
 
         Set<String> metrics = new HashSet<String>();
         metrics.add("status");
@@ -46,11 +46,11 @@ public class TestMySQLAgent {
         MySQLAgent agent = new MySQLAgent("test", MySQLAgent.AGENT_DEFAULT_HOST, MySQLAgent.AGENT_DEFAULT_USER, MySQLAgent.AGENT_DEFAULT_PASSWD,
                 MySQLAgent.AGENT_DEFAULT_PROPERTIES, metrics, new HashMap<String, Object>());
 
-        Map<String, Number> newRelicMetrics = agent.newRelicMetrics(results);
+        Map<String, Float> newRelicMetrics = agent.newRelicMetrics(results);
         assertNotNull(newRelicMetrics);
         assertEquals(2, newRelicMetrics.size());
-        assertEquals(3, newRelicMetrics.get("newrelic/reads"));
-        assertEquals(1020, newRelicMetrics.get("newrelic/writes"));
+        assertEquals(3.0f, newRelicMetrics.get("newrelic/reads"), 0.0001f);
+        assertEquals(1020.0f, newRelicMetrics.get("newrelic/writes"), 0.0001f);
     }
 
     @Test
@@ -72,10 +72,10 @@ public class TestMySQLAgent {
     @Test
     public void testMutexMetricReporting() throws InterruptedException {
 
-        Map<String, Number> results = new HashMap<String, Number>();
-        results.put("status/qcache_free_memory", 10);
-        results.put("innodb_mutex/log0log.c:832", 460);
-        results.put("innodb_mutex/combined buf0buf.c:916", 471);
+        Map<String, Float> results = new HashMap<String, Float>();
+        results.put("status/qcache_free_memory", 10.0f);
+        results.put("innodb_mutex/log0log.c:832", 460.0f);
+        results.put("innodb_mutex/combined buf0buf.c:916", 471.0f);
 
         Set<String> metrics = new HashSet<String>();
         metrics.add("status");
@@ -94,10 +94,10 @@ public class TestMySQLAgent {
         assertNull(agent.reportedMetrics.get("innodb_mutex/combined buf0buf.c:916"));
 
         // create new results with one mutex updated value
-        Map<String, Number> newResults = new HashMap<String, Number>();
-        newResults.put("status/qcache_free_memory", 15);
-        newResults.put("innodb_mutex/log0log.c:832", 460);
-        newResults.put("innodb_mutex/combined buf0buf.c:916", 480);
+        Map<String, Float> newResults = new HashMap<String, Float>();
+        newResults.put("status/qcache_free_memory", 15.0f);
+        newResults.put("innodb_mutex/log0log.c:832", 460.0f);
+        newResults.put("innodb_mutex/combined buf0buf.c:916", 480.0f);
 
         TimeUnit.SECONDS.sleep(1);
 
