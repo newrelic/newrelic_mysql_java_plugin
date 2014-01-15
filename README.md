@@ -87,6 +87,14 @@ The MySQL Plugin is capable of reporting different sets of metrics by configurin
 
 **Note:** The `innodb_mutex` metric category can lead to increased memory usage for the plugin if the monitored database is under a high level of contention (i.e. large numbers of active mutexes).
 
+### AWS RDS
+
+The MySQL plugin can report metrics for Amazon RDS MySQL instances as well. To do so, configure the `mysql.instance.json` as mentioned above in [Configure your MySQL properties](#configure-your-mysql-properties) and set your `host` attribute to the RDS instance endpoint without the port. The endpoint can be found in the AWS console for your instance. For more information regarding the RDS endpoint see the [Amazon RDS documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToInstance.html). 
+
+Ex. `database1.abcjiasdocdsf.us-west-1.rds.amazonaws.com`
+
+The `user` and `passwd` attributes should be the RDS master user and master password, or a user and password that has correct privileges. See [Create MySQL user if necessary](#create-mysql-user-if-necessary) for more information. 
+
 ## Running the agent
 To run the plugin from the command line: 
 `$ java -jar newrelic_mysql_plugin*.jar`
