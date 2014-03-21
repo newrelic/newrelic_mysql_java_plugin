@@ -1,5 +1,11 @@
 ## New Relic MySQL Java Plugin ##
 
+### v1.2.1 - March 21, 2014 ###
+
+**Bug Fixes**
+
+* Fixed a metric value issue where very large or very small metric values would cause errors when reporting data to New Relic
+
 ### v1.2.0 - December 31, 2013 ###
 
 **Bug Fixes**
