@@ -20,6 +20,7 @@ DESC="New Relic mysql plugin daemon"
 NAME=newrelic-mysql-plugin
 DAEMON=newrelic_mysql_plugin*.jar
 DAEMON_ARGS=""
+JAVA_ARGS=""
 PIDFILE=/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 JAVA=/usr/bin/java
@@ -49,7 +50,7 @@ do_start() {
 
     log_daemon_msg "Starting $DESC: "
     # add this if you need to log the output: --no-close
-    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chuid $DAEMON_USER --chdir $DAEMONDIR --exec $JAVA -- -jar $DAEMONDIR/$DAEMON
+    start-stop-daemon --start --quiet --background --make-pidfile --pidfile $PIDFILE --chuid $DAEMON_USER --chdir $DAEMONDIR --exec $JAVA -- $JAVA_ARGS -jar $DAEMONDIR/$DAEMON
     # append this to the above line if you need to log the output:  > /var/log/newrelic-plugin.log 2>&1
     log_end_msg $?
 }
