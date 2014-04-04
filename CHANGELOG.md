@@ -12,6 +12,12 @@
 * Setting the New Relic license key is now done in the new standard `newrelic.json` file
 * Logging configuration has been simplified and is done in the `newrelic.json` file
 
+### v1.2.1 - March 21, 2014 ###
+
+**Bug Fixes**
+
+* Fixed a metric value issue where very large or very small metric values would cause errors when reporting data to New Relic
+
 ### v1.2.0 - December 31, 2013 ###
 
 **Bug Fixes**
