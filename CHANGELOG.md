@@ -1,10 +1,16 @@
 ## New Relic MySQL Java Plugin ##
 
-### v1.2.1 - March 21, 2014 ###
+### v2.0.0 - Unreleased ###
 
-**Bug Fixes**
+**Features**
 
-* Fixed a metric value issue where very large or very small metric values would cause errors when reporting data to New Relic
+* Support for the New Relic Platform Installer CLI tool `npi`
+
+**Changes**
+
+* Configuring the MySQL DB instances that will be monitored has moved from the `mysql.instance.json` file to the new standard `plugin.json` file. More information is available in the README.md
+* Setting the New Relic license key is now done in the new standard `newrelic.json` file
+* Logging configuration has been simplified and is done in the `newrelic.json` file
 
 ### v1.2.0 - December 31, 2013 ###
 

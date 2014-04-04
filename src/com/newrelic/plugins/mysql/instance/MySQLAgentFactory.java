@@ -1,20 +1,19 @@
 package com.newrelic.plugins.mysql.instance;
 
-import static com.newrelic.plugins.mysql.util.Constants.*;
+import static com.newrelic.plugins.mysql.util.Constants.COMMA;
+import static com.newrelic.plugins.mysql.util.Constants.EMPTY_STRING;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.newrelic.metrics.publish.Agent;
 import com.newrelic.metrics.publish.AgentFactory;
-import com.newrelic.metrics.publish.binding.Context;
 import com.newrelic.metrics.publish.configuration.ConfigurationException;
 
 /**
@@ -26,17 +25,11 @@ import com.newrelic.metrics.publish.configuration.ConfigurationException;
  */
 public class MySQLAgentFactory extends AgentFactory {
 
-    /**
-     * Construct an Agent Factory based on the default properties file
-     */
-    public MySQLAgentFactory() {
-        super(MySQLAgent.AGENT_CONFIG_FILE);
-    }
-
+    private static final String CATEGORY_CONFIG_FILE = "metric.category.json";
+    
     /**
      * Configure an agent based on an entry in the properties file. There may be
-     * multiple agents per Plugin
-     * 
+     * multiple agents per plugin
      */
     @Override
     public Agent createConfiguredAgent(Map<String, Object> properties) throws ConfigurationException {
@@ -47,6 +40,10 @@ public class MySQLAgentFactory extends AgentFactory {
         String conn_properties = (String) properties.get("properties");
         String metrics = (String) properties.get("metrics");
 
+        if (name == null || EMPTY_STRING.equals(name)) {
+            throw new ConfigurationException("The 'name' attribute is required. Have you configured the 'config/plugin.json' file?");
+        }
+        
         /**
          * Use pre-defined defaults to simplify configuration
          */
@@ -79,26 +76,17 @@ public class MySQLAgentFactory extends AgentFactory {
      */
     public Map<String, Object> readCategoryConfiguration() throws ConfigurationException {
         Map<String, Object> metricCategories = new HashMap<String, Object>();
-
-        JSONArray json;
-        String filename = MySQLAgent.CATEGORY_CONFIG_FILE;
         try {
-            json = readJSONFile(filename);
+            JSONArray json = readJSONFile(CATEGORY_CONFIG_FILE);
             for (int i = 0; i < json.size(); i++) {
                 JSONObject obj = (JSONObject) json.get(i);
                 String category = (String) obj.get("category");
                 metricCategories.put(category, obj);
             }
         } catch (ConfigurationException e) {
-            throw logAndThrow("Error parsing config file " + filename);
+            throw new ConfigurationException("'metric_categories' could not be found in the 'plugin.json' configuration file");
         }
-
         return metricCategories;
-    }
-
-    private ConfigurationException logAndThrow(String message) {
-        Context.log(Level.SEVERE, message);
-        return new ConfigurationException(message);
     }
 
     Set<String> processMetricCategories(String metrics) {
