@@ -1,8 +1,4 @@
-.classpath
 newrelic_mysql_plugin.jar
 build/
 META-INF/
 bin/
-
-
-

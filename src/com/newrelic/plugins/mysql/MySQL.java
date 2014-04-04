@@ -14,9 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
-import com.newrelic.metrics.publish.binding.Context;
+import com.newrelic.metrics.publish.util.Logger;
 
 /**
  * This class provide MySQL specific methods, operations and values for New Relic Agents reporting MySQL Metrics
@@ -26,6 +25,8 @@ import com.newrelic.metrics.publish.binding.Context;
  */
 public class MySQL {
 
+    private static final Logger logger = Logger.getLogger(MySQL.class);
+    
     private Connection conn = null; // Cached Database Connection
     private boolean connectionInitialized = false;
 
@@ -45,7 +46,7 @@ public class MySQL {
         String dbURL = buildString(JDBC_URL, host, SLASH, properties);
         String connectionInfo = buildString(dbURL, SPACE, user, PASSWORD_FILTERED);
 
-        Context.log(Level.FINE, "Getting new MySQL Connection: ", connectionInfo);
+        logger.debug("Getting new MySQL Connection: ", connectionInfo);
 
         try {
             if (!connectionInitialized) {
@@ -55,11 +56,10 @@ public class MySQL {
             }
             newConn = DriverManager.getConnection(dbURL, user, passwd);
             if (newConn == null) {
-                Context.log(Level.SEVERE, "Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings.");
+                logger.error("Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings.");
             }
         } catch (Exception e) {
-            Context.log(Level.SEVERE, "Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings. ",
-                    e.getMessage());
+            logger.error("Unable to obtain a new database connection: ", connectionInfo, ", check your MySQL configuration settings. ", e.getMessage());
         }
         return newConn;
     }
@@ -95,12 +95,12 @@ public class MySQL {
             Statement stmt = null;
             ResultSet rs = null;
             try {
-                Context.log(Level.FINE, "Checking connection - pinging MySQL server");
+                logger.debug("Checking connection - pinging MySQL server");
                 stmt = conn.createStatement();
                 rs = stmt.executeQuery(PING);
                 available = true;
             } catch (SQLException e) {
-                Context.log(Level.FINE, "The MySQL connection is not available.");
+                logger.debug("The MySQL connection is not available.");
                 available = false;
             } finally {
                 try {
@@ -111,7 +111,7 @@ public class MySQL {
                         rs.close();
                     }
                 } catch (SQLException e) {
-                    Context.log(Level.FINE, "Error closing statement/result set: ", e);
+                    logger.debug(e, "Error closing statement/result set: ");
                 }
                 rs = null;
                 stmt = null;
@@ -129,7 +129,7 @@ public class MySQL {
                 conn.close();
                 conn = null;
             } catch (SQLException e) {
-                Context.log(Level.FINE, "Error closing connection: ", e);
+                logger.debug(e, "Error closing connection: ");
             }
         }
     }
@@ -149,7 +149,7 @@ public class MySQL {
         Map<String, Float> results = new HashMap<String, Float>();
 
         try {
-            Context.log(Level.FINE, "Running SQL Statement ", SQL);
+            logger.debug("Running SQL Statement ", SQL);
             stmt = c.createStatement();
             rs = stmt.executeQuery(SQL); // Execute the given SQL statement
             ResultSetMetaData md = rs.getMetaData(); // Obtain Meta data about the SQL query (column names etc)
@@ -193,7 +193,7 @@ public class MySQL {
             }
             return results;
         } catch (SQLException e) {
-            Context.log(Level.SEVERE, "An SQL error occured running '", SQL, "' ", e.getMessage());
+            logger.error("An SQL error occured running '", SQL, "' ", e.getMessage());
         } finally {
             try {
                 if (rs != null) {
@@ -230,12 +230,12 @@ public class MySQL {
             mutex = buildString(category, SEPARATOR, rs.getString(2).replaceAll(INNODB_MUTEX_REGEX, EMPTY_STRING).replaceAll(ARROW, UNDERSCORE));
             value = translateStringToNumber(rs.getString(3).substring(rs.getString(3).indexOf(EQUALS) + 1));
             if (mutexes.containsKey(mutex)) {
-                Context.log(Level.FINE, "appending ", value);
+                logger.debug("appending ", value);
                 value = value + mutexes.get(mutex);
             }
             mutexes.put(mutex, value);
         }
-        Context.log(Level.FINE, "Mutexes: ", mutexes);
+        logger.debug("Mutexes: ", mutexes);
 
         return mutexes;
     }
@@ -263,7 +263,7 @@ public class MySQL {
         Map<String, Float> results = new HashMap<String, Float>();
         Float log_sequence_number = 0.0f, last_checkpoint = 0.0f;
 
-        Context.log(Level.FINE, "Processing ", lines.size(), " of SHOW ENGINE INNODB STATUS");
+        logger.debug("Processing ", lines.size(), " of SHOW ENGINE INNODB STATUS");
 
         for (String s : lines) {
             if (s.startsWith(HISTORY_LIST_LENGTH)) {
@@ -284,7 +284,7 @@ public class MySQL {
         }
         results.put(buildString(category, SEPARATOR, CHECKPOINT_AGE_METRIC), log_sequence_number - last_checkpoint);
 
-        Context.log(Level.FINE, results);
+        logger.debug(results);
 
         return results;
     }
@@ -302,7 +302,7 @@ public class MySQL {
             }
             return Float.parseFloat(val);
         } catch (Exception e) {
-            Context.log(Level.SEVERE, "Unable to parse int/float number from value ", val);
+            logger.error("Unable to parse int/float number from value ", val);
         }
         return 0.0f;
     }

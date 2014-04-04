@@ -9,10 +9,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 
 import com.newrelic.metrics.publish.Agent;
-import com.newrelic.metrics.publish.binding.Context;
+import com.newrelic.metrics.publish.util.Logger;
 import com.newrelic.plugins.mysql.MetricMeta;
 import com.newrelic.plugins.mysql.MySQL;
 
@@ -24,17 +23,17 @@ import com.newrelic.plugins.mysql.MySQL;
  * 
  */
 public class MySQLAgent extends Agent {
+    
+    private static final Logger logger = Logger.getLogger(MySQLAgent.class);
+    
     private static final String GUID = "com.newrelic.plugins.mysql.instance";
-    private static final String version = "1.2.1";
+    private static final String version = "2.0.0";
 
     public static final String AGENT_DEFAULT_HOST = "localhost"; // Default values for MySQL Agent
     public static final String AGENT_DEFAULT_USER = "newrelic";
     public static final String AGENT_DEFAULT_PASSWD = "f63c225f4abe9e13";
     public static final String AGENT_DEFAULT_PROPERTIES = "";
     public static final String AGENT_DEFAULT_METRICS = "status,newrelic";
-
-    public static final String AGENT_CONFIG_FILE = "mysql.instance.json";
-    public static final String CATEGORY_CONFIG_FILE = "metric.category.json";
 
     private final String name; // Agent Name
 
@@ -81,7 +80,7 @@ public class MySQLAgent extends Agent {
 
         createMetaData(); // Define incremental counters that are value/sec etc
 
-        Context.log(Level.FINE, "MySQL Agent initialized: ", formatAgentParams(name, host, user, properties, metrics));
+        logger.debug("MySQL Agent initialized: ", formatAgentParams(name, host, user, properties, metrics));
     }
 
     /**
@@ -114,7 +113,7 @@ public class MySQLAgent extends Agent {
             return; // Unable to continue without a valid database connection
         }
 
-        Context.log(Level.FINE, "Gathering MySQL metrics. ", getAgentInfo());
+        logger.debug("Gathering MySQL metrics. ", getAgentInfo());
 
         Map<String, Float> results = gatherMetrics(c); // Gather defined metrics
         reportMetrics(results); // Report Metrics to New Relic
@@ -162,7 +161,7 @@ public class MySQLAgent extends Agent {
             return derived; // "status" category is a pre-requisite for newrelic metrics
         }
 
-        Context.log(Level.FINE, "Adding New Relic derived metrics");
+        logger.debug("Adding New Relic derived metrics");
 
         /* read and write volume */
         if (areRequiredMetricsPresent("Reads", existing, "status/com_select", "status/qcache_hits")) {
@@ -322,8 +321,8 @@ public class MySQLAgent extends Agent {
      */
     public void reportMetrics(Map<String, Float> results) {
         int count = 0;
-        Context.log(Level.FINE, "Collected ", results.size(), " MySQL metrics. ", getAgentInfo());
-        Context.log(Level.FINEST, results);
+        logger.debug("Collected ", results.size(), " MySQL metrics. ", getAgentInfo());
+        logger.debug(results);
 
         Iterator<String> iter = results.keySet().iterator();
         while (iter.hasNext()) { // Iterate over current metrics
@@ -331,7 +330,7 @@ public class MySQLAgent extends Agent {
             Float val = results.get(key);
             MetricMeta md = getMetricMeta(key);
             if (md != null) { // Metric Meta data exists (from metric.category.json)
-                Context.log(Level.FINE, METRIC_LOG_PREFIX, key, SPACE, md, EQUALS, val);
+                logger.debug(METRIC_LOG_PREFIX, key, SPACE, md, EQUALS, val);
                 count++;
 
                 if (md.isCounter()) { // Metric is a counter
@@ -341,11 +340,11 @@ public class MySQLAgent extends Agent {
                 }
             } else { // md != null
                 if (firstReport) { // Provide some feedback of available metrics for future reporting
-                    Context.log(Level.FINE, "Not reporting identified metric ", key);
+                    logger.debug("Not reporting identified metric ", key);
                 }
             }
         }
-        Context.log(Level.FINE, "Reported to New Relic ", count, " metrics. ", getAgentInfo());
+        logger.debug("Reported to New Relic ", count, " metrics. ", getAgentInfo());
     }
 
     /**
@@ -518,7 +517,7 @@ public class MySQLAgent extends Agent {
         for (String key : keys) {
             if (!map.containsKey(key)) {
                 if (firstReport) { // Only report missing category data on the first run so as not to clutter the log
-                    Context.log(Level.FINEST, "Not reporting on '", category, "' due to missing data field '", key, "'");
+                    logger.debug("Not reporting on '", category, "' due to missing data field '", key, "'");
                 }
 
                 return false;
