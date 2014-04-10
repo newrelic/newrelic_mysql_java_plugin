@@ -1,6 +1,6 @@
 ## New Relic MySQL Java Plugin ##
 
-### v2.0.0 - Unreleased ###
+### v2.0.0 - April 4, 2014 ###
 
 **Features**
 

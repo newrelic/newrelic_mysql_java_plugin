@@ -22,7 +22,8 @@ The MySQL plugin for New Relic requires the following:
 The MySQL plugin can be installed in several ways:
 
 * [Chef and Puppet Install Scripts](#chef-and-puppet)
-* [Manual Install](#download)
+* [Manual Install](#manual-install)
+* [New Relic Platform Installer (Beta)](#new-relic-platform-installer-beta)
 
 ## Chef and Puppet
 
@@ -30,7 +31,7 @@ For [Chef](http://www.getchef.com) and [Puppet](http://puppetlabs.com) support s
 
 Additional information on using Chef and Puppet with New Relic is available in New Relic's [documentation](https://docs.newrelic.com/docs/plugins/plugin-installation-with-chef-and-puppet).
 
-## Download
+## Manual Install
 Download and unpack the [New Relic plugin for MySQL from Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
 Linux example:
@@ -44,6 +45,14 @@ Windows example:
     $ mkdir /path/to/newrelic-plugin
     $ cd /path/to/newrelic-plugin
     # untar the archive with a tool of your choice
+    
+## New Relic Platform Installer (Beta)
+
+The New Relic Platform Installer (NPI) is a simple, lightweight command line tool that helps you easily download, configure and manage New Relic Platform Plugins.  If you're interested in participating in our public beta, simply go to [our forum category](https://discuss.newrelic.com/category/platform-plugins/platform-installer-beta) and checkout the ['Getting Started' section](https://discuss.newrelic.com/t/getting-started-for-the-platform-installer-beta/842).  If you have any questions, concerns or feedback, please do not hesitate to reach out through the forums as we greatly appreciate your feedback!
+
+Once you've installed the NPI tool, run the following command:
+
+	./npi install com.newrelic.plugins.mysql.instance
     
 ## Create MySQL user if necessary
 The MySQL plugin requires a MySQL user with limited privileges. To use the New Relic default, run the following SQL script located at [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql).
