@@ -7,6 +7,19 @@ Find the New Relic MySQL plugin in [Plugin Central](https://rpm.newrelic.com/ext
 **Your New Relic MySQL plugin can be operational in just a few minutes when following these steps.**
 
 ----
+
+## What's new in V2? ##
+
+This plugin has been upgraded to V2 of the New Relic Platform Java SDK.  For version 2 of the Java SDK, we have made several changes to help make the installation experience more uniform for plugins.  The changes include:
+
+* 'newrelic.properties' file is now 'newrelic.json'
+* Plugin configuration is now done through the 'plugin.json' file
+* Logging has been made more robust and easier to use.
+* Jar distributables now have a well-defined name (i.e. plugin.jar)
+* Configuration files are now located in a well-defined location (i.e. './config' off the root)
+
+More information on these changes (including how to configure logging, license keys, and the plugin itself) can be found [here](https://github.com/newrelic-platform/metrics_publish_java/tree/serened/beta_branch_v2).  If you have any feedback, please don't hesitate to reach out to us through our forums [here](https://discuss.newrelic.com/category/platform-plugins/platform-sdk-beta).
+
 ## Prerequisites
 The MySQL plugin for New Relic requires the following:
 
