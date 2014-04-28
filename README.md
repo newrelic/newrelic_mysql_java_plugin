@@ -50,8 +50,10 @@ The New Relic Platform Installer (NPI) is a simple, lightweight command line too
 
 Once you've installed the NPI tool, run the following command:
 
+```
 	./npi install com.newrelic.plugins.mysql.instance
-	
+```	
+
 This command will take care of the creation of `newrelic.json` and `plugin.json` configuration files.  See the [configuration information](#configuration-information) section for more information.
 
 ### Option 2 - Install via Chef or Puppet
@@ -60,7 +62,7 @@ For [Chef](http://www.getchef.com) and [Puppet](http://puppetlabs.com) support s
 
 Additional information on using Chef and Puppet with New Relic is available in New Relic's [documentation](https://docs.newrelic.com/docs/plugins/plugin-installation-with-chef-and-puppet).
 
-### Option 3 - Install Manually
+### Option 3 - Install Manually (Non-standard)
 
 #### Step 1 - Downloading and Extracting the Plugin
 
@@ -69,7 +71,7 @@ The latest version of the plugin can be downloaded [here](https://rpm.newrelic.c
 **note** - This plugin is distributed in tar.gz format and can be extracted with the following command on Unix-based systems (Windows users will need to download a third-party extraction tool or use the [New Relic Platform Installer](https://discuss.newrelic.com/t/getting-started-with-the-platform-installer-beta/842)):
 
 ```
-	tar -xvzf <compressedarchive>.tar.gz
+	tar -xvzf newrelic_mysql_plugin-X.Y.Z.tar.gz
 ```
 
 #### Step 2 - Configuring the Plugin
