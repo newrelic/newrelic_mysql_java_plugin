@@ -18,7 +18,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="New Relic mysql plugin daemon"
 NAME=newrelic-mysql-plugin
-DAEMON=newrelic_mysql_plugin*.jar
+DAEMON=plugin.jar
 DAEMON_ARGS=""
 PIDFILE=/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
