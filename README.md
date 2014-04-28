@@ -5,9 +5,6 @@ Find the New Relic MySQL plugin in the [New Relic storefront](http://newrelic.co
 Find the New Relic MySQL plugin in [Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
 ----
-**Your New Relic MySQL plugin can be operational in just a few minutes when following these steps.**
-
-----
 
 ## What's new in V2?
 
