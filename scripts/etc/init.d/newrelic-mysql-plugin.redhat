@@ -24,7 +24,7 @@ PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 JAVA=/usr/bin/java
 DAEMON_USER=newrelic
-DAEMONDIR=/opt/newrelic_mysql
+DAEMONDIR=/PATH/TO/PLUGIN
 
 . /etc/init.d/functions
 
