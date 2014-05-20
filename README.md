@@ -16,7 +16,7 @@ This plugin has been upgraded to V2 of the New Relic Platform Java SDK.  For ver
 * Jar distributables now have a well-defined name (i.e. plugin.jar)
 * Configuration files are now located in a well-defined location (i.e. './config' off the root)
 
-More information on these changes (including how to configure logging, license keys, and the plugin itself) can be found [here](https://github.com/newrelic-platform/metrics_publish_java/tree/serened/beta_branch_v2).  If you have any feedback, please don't hesitate to reach out to us through our forums [here](https://discuss.newrelic.com/category/platform-plugins/platform-sdk-beta).
+More information on these changes (including how to configure logging, license keys, and the plugin itself) can be found [here](https://github.com/newrelic-platform/metrics_publish_java#configuration-options).  If you have any feedback, please don't hesitate to reach out to us through our forums [here](https://discuss.newrelic.com/category/platform-plugins/platform-sdk).
 
 ----
 
@@ -37,13 +37,13 @@ The requirements for running this plugin are:
 
 This plugin can be installed one of the following ways:
 
-* [Option 1 - New Relic Platform Installer (Beta)](#option-1--install-with-the-new-relic-platform-installer-beta)
+* [Option 1 - New Relic Platform Installer](#option-1--install-with-the-new-relic-platform-installer)
 * [Option 2 - Chef and Puppet Install Scripts](#option-2--install-via-chef-or-puppet)
 * [Option 3 - Manual Install](#option-3--install-manually)
 
-### Option 1 - Install with the New Relic Platform Installer (Beta)
+### Option 1 - Install with the New Relic Platform Installer
 
-The New Relic Platform Installer (NPI) is a simple, lightweight command line tool that helps you easily download, configure and manage New Relic Platform Plugins.  If you're interested in participating in our public beta, simply go to [our forum category](https://discuss.newrelic.com/category/platform-plugins/platform-installer-beta) and checkout the ['Getting Started' section](https://discuss.newrelic.com/t/getting-started-for-the-platform-installer-beta/842).  If you have any questions, concerns or feedback, please do not hesitate to reach out through the forums as we greatly appreciate your feedback!
+The New Relic Platform Installer (NPI) is a simple, lightweight command line tool that helps you easily download, configure and manage New Relic Platform Plugins.  To learn more simply go to [our forum category](https://discuss.newrelic.com/category/platform-plugins/platform-installer) and checkout the ['Getting Started' section](https://discuss.newrelic.com/t/getting-started-for-the-platform-installer/842).  If you have any questions, concerns or feedback, please do not hesitate to reach out through the forums as we greatly appreciate your feedback!
 
 Once you've installed the NPI tool, run the following command:
 
@@ -65,7 +65,7 @@ Additional information on using Chef and Puppet with New Relic is available in N
 
 The latest version of the plugin can be downloaded [here](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance).  Once the plugin is on your box, extract it to a location of your choosing.
 
-**note** - This plugin is distributed in tar.gz format and can be extracted with the following command on Unix-based systems (Windows users will need to download a third-party extraction tool or use the [New Relic Platform Installer](https://discuss.newrelic.com/t/getting-started-with-the-platform-installer-beta/842)):
+**note** - This plugin is distributed in tar.gz format and can be extracted with the following command on Unix-based systems (Windows users will need to download a third-party extraction tool or use the [New Relic Platform Installer](https://discuss.newrelic.com/t/getting-started-with-the-platform-installer/842)):
 
 ```
 	tar -xvzf newrelic_mysql_plugin-X.Y.Z.tar.gz
@@ -92,7 +92,7 @@ For more information on JVM server class machines and the `-Xmx` JVM argument, s
  
 #### Step 4 - Keeping the Plugin Running
 
-Step 3 showed you how to run the plugin; however, there are several problems with running the process directly in the foreground (For example, when the machine reboots the process will not be started again).  That said, there are several common ways to keep a plugin running, but they do require more advanced knowledge or additional tooling.  We highly recommend considering using the [New Relic Platform Installer](https://discuss.newrelic.com/t/getting-started-with-the-platform-installer-beta/842) or Chef/Puppet scripts for installing plugins as they will take care of most of the heavy lifting for you.  
+Step 3 showed you how to run the plugin; however, there are several problems with running the process directly in the foreground (For example, when the machine reboots the process will not be started again).  That said, there are several common ways to keep a plugin running, but they do require more advanced knowledge or additional tooling.  We highly recommend considering using the [New Relic Platform Installer](https://discuss.newrelic.com/t/getting-started-with-the-platform-installer/842) or Chef/Puppet scripts for installing plugins as they will take care of most of the heavy lifting for you.  
 
 If you prefer to be more involved in the maintaince of the process, consider one of these tools for managing your plugin process (bear in mind that some of these are OS-specific):
 
