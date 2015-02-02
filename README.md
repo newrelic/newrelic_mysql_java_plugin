@@ -135,6 +135,9 @@ Below is an example of the `plugin.json` file's contents, you can add multiple o
 
 **note** - If using an externally visible IP address, the username and password fields are no longer optional. See the 'Create MySQL user (optional)' section below.
 
+**note** - If using more metrics than the ones in the default template, be sure write the metric names without spaces like: `"metrics" : "status,master,newrelic,innodb_status,buffer_pool_stats",`.
+
+
 #### Configuring the `newrelic.json` file: 
 
 The `newrelic.json` file also has a provided template in the `config` directory named `newrelic.template.json`.  If you are installing manually, make a copy of this template file and rename it to `newrelic.json` (again, the New Relic Platform Installer will automatically handle this for you).  
