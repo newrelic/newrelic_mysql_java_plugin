@@ -133,7 +133,7 @@ Below is an example of the `plugin.json` file's contents, you can add multiple o
 
 **note** - If you used the provided [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql) to generate a default user and password, then you do not need to set the "user" and "passwd" attributes.
 
-**note** - If using an externally visible IP address, the username and password fields are no longer optional. See the 'Create MySQL user (optional)' section below.
+**note** - If using an externally visible IP address, the username and password fields are no longer optional. See the [Create a MySQL user (optional)](/README.md#create-a-mysql-user-optional) section below.
 
 #### Configuring the `newrelic.json` file: 
 
