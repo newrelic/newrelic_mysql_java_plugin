@@ -14,6 +14,7 @@ FUNCTIONS="/etc/init.d/functions"
 PROGRAM="newrelic-mysql-plugin"
 LOCK_FILE="/var/lock/subsys/${PROGRAM}"
 PID_FILE="/var/run/${PROGRAM}.pid"
+RUNAS="newrelic"
 
 # Set this to the plugin directory
 [ -z "${PLUGIN_DIR}" ] && PLUGIN_DIR="/usr/local/newrelic-mysql"
@@ -38,7 +39,7 @@ JAR=`ls *.jar 2>/dev/null | head -1`
 start() {
         # Start daemons.
         echo -n $"Starting ${PROGRAM}: "
-        nohup ${JAVA} -jar ${JAR} > ${LOG_FILE} 2>&1 &
+        daemon --user=$RUNAS --pidfile=$PID_FILE "${JAVA} -Xmx128m -jar ${JAR} > ${LOG_FILE} 2>&1 &"
 	RETVAL=$?
         echo $! > ${PID_FILE}
         echo
