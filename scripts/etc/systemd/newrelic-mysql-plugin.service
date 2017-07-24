@@ -1,0 +1,22 @@
+[Unit]
+Description=New Relic MySQL Plugin
+After=network.target iptables.service firewalld.service firewalld.service httpd.service
+
+[Service]
+Type=simple
+User=newrelic
+PIDFile=/var/run/newrelic-mysql-plugin.pid
+Restart=always
+RestartSec=3
+ExecStartPre=/usr/bin/rm -f /var/run/newrelic-mysql-plugin.pid
+ExecStart=/usr/bin/java -Xmx128m "-Dnewrelic.platform.config.dir=/etc/newrelic/npi/plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-2.0.0/config" -jar "/etc/newrelic/npi/plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-2.0.0/plugin.jar"
+StandardOutput=/etc/newrelic/npi/plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-2.0.0/daemon.log
+ExecStop=/bin/kill -s HUP $MAINPID
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=5
+KillMode=process
+
+[Install]
+
+WantedBy=multi-user.target
