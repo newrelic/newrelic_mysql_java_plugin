@@ -120,7 +120,7 @@ Below is an example of the `plugin.json` file's contents, you can add multiple o
       "agents": [
         {
           "name" : "Production Master",
-          "host" : "localhost",
+          "host" : "localhost:port",
           "metrics" : "status,newrelic",
           "user" : "USER_NAME_HERE",
           "passwd" : "USER_CLEAR_TEXT_PASSWORD_HERE"
