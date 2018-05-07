@@ -4,6 +4,21 @@ Find the New Relic MySQL plugin in the [New Relic storefront](http://newrelic.co
 
 Find the New Relic MySQL plugin in [Plugin Central](https://rpm.newrelic.com/extensions/com.newrelic.plugins.mysql.instance)
 
+The MySQL plugin monitors a variety of metrics provided by MySQL server through query results. Instead of having to type these queries to get performance and functional metrics on your database, the plugin polls the database server on a 1-minute harvest cycle interval and displays the information in a dashboard.
+
+----
+
+## General functionality
+
+In order to poll certain types of metrics the plugin expects to find configuration values pointing out which categories of metrics should be collected. Some of these categories depend on each other, whereas others are only useful in certain contexts. These metric categories are listed as part of the "metrics" key in the plugin.json configuration file for the plugin. The following categories are available:
+
+Metric Category|Depends On|Default Database Query|Description|
+----------------|------------|------------------------|-------------|
+status||SHOW GLOBAL STATUS | General status metrics about the running database server|
+master||SHOW MASTER STATUS|Status metrics specific to the "master" server of a master-slave configuration|
+slave||SHOW SLAVE STATUS|Status metrics specific to the "slave" server of a master-slave configuration|
+newrelic|status||General metrics derived from other (more directly available) ones.|
+
 ----
 
 ## What's new in V2?
@@ -196,6 +211,15 @@ Example:
   "proxy_port": 9000
 }
 ```
+### Collecting Logs
+#### When using NPI:
+
+1. Browse to your plugin install directory and edit the `newrelic.json` file, from the NPI folder `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/config/newrelic.json`
+2. Change the line `log_level": "info"` to  `log_level": "debug"`
+3. Save and close the file
+4. Restart the plugin with the commands; `./npi stop com.newrelic.plugins.mysql.instance` then `./npi start com.newrelic.plugins.mysql.instance`
+5. If applicable, the generated logs from `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/logs/newrelic_plugin.log` can be sent to support
+6. Set the log level back to info and restart the plugin again
 
 ### Additional Configuration
 
