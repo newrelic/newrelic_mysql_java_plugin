@@ -144,11 +144,13 @@ Below is an example of the `plugin.json` file's contents, you can add multiple o
     }
 ```
 
-**note** - Set the "name" attribute to match your MySQL databases purpose, e.g. "Production Master" as this will be used to identify that instance in the New Relic UI. 
+#### Tips:
 
-**note** - If you used the provided [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql) to generate a default user and password, then you do not need to set the "user" and "passwd" attributes.
+* Set the "name" attribute to match your MySQL databases purpose, e.g. "Production Master" as this will be used to identify that instance in the New Relic UI. 
 
-**note** - If using an externally visible IP address, the username and password fields are no longer optional. See the 'Create MySQL user (optional)' section below.
+* If you used the provided [/scripts/mysql_user.sql](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/scripts/mysql_user.sql) to generate a default user and password, then you do not need to set the "user" and "passwd" attributes.
+
+* If using an externally visible IP address, the username and password fields are no longer optional. See [Create a MySQL user (optional)](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/README.md#create-a-mysql-user-optional).
 
 #### Configuring the `newrelic.json` file: 
 
@@ -211,15 +213,6 @@ Example:
   "proxy_port": 9000
 }
 ```
-### Collecting Logs
-#### When using NPI:
-
-1. Browse to your plugin install directory and edit the `newrelic.json` file, from the NPI folder `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/config/newrelic.json`
-2. Change the line `log_level": "info"` to  `log_level": "debug"`
-3. Save and close the file
-4. Restart the plugin with the commands; `./npi stop com.newrelic.plugins.mysql.instance` then `./npi start com.newrelic.plugins.mysql.instance`
-5. If applicable, the generated logs from `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/logs/newrelic_plugin.log` can be sent to support
-6. Set the log level back to info and restart the plugin again
 
 ### Additional Configuration
 
@@ -249,7 +242,50 @@ The MySQL Plugin is capable of reporting different sets of metrics by configurin
 
 **Note:** The `innodb_mutex` metric category can lead to increased memory usage for the plugin if the monitored database is under a high level of contention (i.e. large numbers of active mutexes).
 
-----
+## Troubleshooting
+
+### If you don’t see plugin metrics report to your account:
+
+When the component simply doesn't report to your account, it's usually indicative of a permissions issue. When this issue occurs, ensure that you have a user with the permissions listed in the repository's additional configuration:
+
+* [Additional Configuration](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/README.md#additional-configuration)
+
+Other than permissions, verifying that the license key is correct and that the plugin can connect to our collectors through any firewalls are good sanity checks:
+
+* [Confuguring the `newrelic.json` file](https://github.com/newrelic-platform/newrelic_mysql_java_plugin/blob/master/README.md#configuring-the-pluginjson-file)
+
+### If you don't see any data for the 'X' metric:
+
+Most of the time, a missing metric is a result of a missing category in the plugin.json file. Confirm your setup (i.e. are you using a master->slave architecture?) and verify that the correct categories for that component (slave, master, etc.) are entered into the "metrics" field of the plugin.json file.
+
+If the correct categories are listed, the issue is almost always a problem with the MySQL server not reporting certain numbers, or not running in a setup where the numbers will ever have anything meaningful to report.
+
+You may be curious about "Replication Lag" on a slave database. Assuming configuration is correct, replication lag will only be present in a small set of circumstances. Details on this metric and all other metrics the plugin draws from can be found in the official MySQL documentation for the underlying queries.
+
+* [SHOW STATUS Syntax](https://dev.mysql.com/doc/refman/5.7/en/show-status.html)
+
+* [SHOW MASTER STATUS Syntax](https://dev.mysql.com/doc/refman/5.7/en/show-master-status.html)
+
+* [SHOW SLAVE STATUS Syntax](https://dev.mysql.com/doc/refman/5.7/en/show-slave-status.html)
+
+For further confirmation of the numbers reported for various metrics try collecting detailed logs from your plugin instance and examining them.
+
+### Collecting Logs
+#### When using NPI:
+
+1. Browse to your plugin install directory and edit the `newrelic.json` file, from the NPI folder `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/config/newrelic.json`
+2. Change the line `log_level": "info"` to  `log_level": "debug"`
+3. Save and close the file
+4. Restart the plugin with the commands; `./npi stop com.newrelic.plugins.mysql.instance` then `./npi start com.newrelic.plugins.mysql.instance`
+5. If applicable, the generated logs from `plugins/com.newrelic.plugins.mysql.instance/newrelic_mysql_plugin-{version}/logs/newrelic_plugin.log` can be sent to support
+6. Set the log level back to `info` and restart the plugin again
+
+
+---
+
+Once permissions and configuration are taken care of, most problems you encounter will be the result of the underlying database server. Certain metrics always reporting as "0", missing query counts, etc. can be influenced by various aspects of how MySQL is expected to run.
+
+Additionally, even though Amazon Aurora is built around MySQL, the MySQL plugin will not instrument IOPS due to how IOPS are billed in Amazon RDS.
 
 ## Support
 
