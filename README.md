@@ -1,3 +1,5 @@
+*Development of this plugin has discontinued and you are encouraged to migrate your MySQL monitoring solution to the [MySQL integration](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/mysql-monitoring-integration) for [New Relic Infrastructure](https://docs.newrelic.com/docs/infrastructure).*
+
 # New Relic Platform MySQL Plugin - Java
 
 Find the New Relic MySQL plugin in the [New Relic storefront](http://newrelic.com/plugins/new-relic-inc/52)
