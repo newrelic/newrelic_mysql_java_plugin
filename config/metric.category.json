@@ -6,7 +6,7 @@
                            "value_metrics" : "Read_Master_Log_Pos,Slave_IO_Running,Slave_SQL_Running,Exec_Master_Log_Pos,Relay_Log_Pos,Relay_Log_Size,Seconds_Behind_Master,Last_Errno",
                            "counter_metrics" : "" },
   { "category" : "master", "SQL" : "SHOW MASTER STATUS", "result" : "row", 
-                           "counter_metrics" : "Position" }
+                           "counter_metrics" : "Position" },
   { "category" : "buffer_pool_stats", "SQL" : "SELECT * FROM information_schema.innodb_buffer_pool_stats", "result" : "row", "comment" : "MySQL 5.5 or later",
                            "value_metrics" : "",
                            "counter_metrics" : "", },
