@@ -83,6 +83,6 @@ case "$1" in
 	exit 3
 	;;
   *)
-	echo $"Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
+	echo "Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
 	exit 2
 esac
