@@ -1,3 +1,5 @@
+[![Archived header](https://github.com/newrelic/open-source-office/raw/master/examples/categories/images/Archived.png)](https://github.com/newrelic/open-source-office/blob/master/examples/categories/index.md#archived)
+
 *Development of this plugin has discontinued and you are encouraged to migrate your MySQL monitoring solution to the [MySQL integration](https://docs.newrelic.com/docs/integrations/host-integrations/host-integrations-list/mysql-monitoring-integration) for [New Relic Infrastructure](https://docs.newrelic.com/docs/infrastructure).*
 
 # New Relic Platform MySQL Plugin - Java
