@@ -1,0 +1,123 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          newrelic-mysql-plugin
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: New Relic mysql plugin CentOS daemon control script
+# Description:       Controls the New Relic java mysql plugin
+### END INIT INFO
+
+# Author: Andrew Leslie <arleslie@arleslie.com>
+# Based off Debian init.d script by: Joe Niland <joe@originalmind.com.au>
+
+# CONFIGURATION
+# - Change DAEMONDIR to your chosen location for the plugin jar file.
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="New Relic mysql plugin daemon"
+NAME=newrelic-mysql-plugin
+DAEMON=plugin.jar
+DAEMON_ARGS=""
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+JAVA=/usr/bin/java
+DAEMON_USER=newrelic
+DAEMONDIR=/PATH/TO/PLUGIN
+
+. /etc/init.d/functions
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Exit if the package is not installed
+if test ! -x $JAVA -o ! -e $DAEMONDIR/$DAEMON
+then
+    echo $JAVA or $DAEMONDIR/$DAEMON do not exist
+    exit 0
+fi
+
+do_start() {
+    pid=$(pidofproc -p $PIDFILE $DAEMON)
+    if [ -n "$pid" ] ; then
+        echo newreplic-mysql already runing: $pid
+        exit 0
+    fi
+
+    echo -n Starting $DESC:
+    cd $DAEMONDIR
+    $JAVA -Xmx128m -jar $DAEMON > /dev/null &
+    echo $! > $PIDFILE
+    echo
+    exit $?
+}
+
+do_stop() {
+    echo -n Stopping...
+    kill $(cat $PIDFILE)
+    RC=$?
+    [ $RC -eq 0 ] && rm -f $PIDFILE
+    echo
+    exit $RC
+}
+
+do_status() {
+    if [[ -a $PIDFILE ]]
+    then
+        if ps -p $(cat $PIDFILE) > /dev/null
+        then
+            echo "$NAME is running"
+        else
+            echo "$NAME is not runing"
+        fi
+    else
+        echo "$NAME is not running"
+    fi
+}
+
+case "$1" in
+    start)
+        [ "$VERBOSE" != no ] && echo "Starting $DESC" "$NAME"
+        do_start
+        case "$?" in
+            0|1) [ "$VERBOSE" != no ] && exit 0 ;;
+              2) [ "$VERBOSE" != no ] && exit 1 ;;
+        esac
+        ;;
+    stop)
+        [ "$VERBOSE" != no ] && echo "Stopping $DESC" "$NAME"
+        do_stop
+        case "$?" in
+            0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+              2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        esac
+        ;;
+    status)
+        do_status
+        ;;
+    restart|force-reload)
+        echo -n "Restarting $DESC" "$NAME"
+        do_stop
+        case "$?" in
+          0|1)
+              do_start
+              case "$?" in
+                  0) exit 0 ;;
+                  1) exit 1 ;; # Old process is still running
+                  *) exit 1 ;; # Failed to start
+              esac
+              ;;
+          *)
+              # Failed to stop
+              exit 1
+              ;;
+        esac
+        ;;
+    *)
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+        exit 3
+        ;;
+esac
+
+exit 0
