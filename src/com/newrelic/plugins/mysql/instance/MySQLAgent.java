@@ -121,7 +121,7 @@ public class MySQLAgent extends Agent {
     }
 
     /**
-     * This method runs the varies categories of MySQL statements and gathers the metrics that can be reported
+     * This method runs the various categories of MySQL statements and gathers the metrics that can be reported
      * 
      * @param Connection c MySQL Database Connection
      * @param String List of metrics to be obtained for this agent
