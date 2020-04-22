@@ -190,7 +190,7 @@ Example:
 
 ```
 {
-  "license_key": "YOUR_LICENSE_KEY_HERE"
+  "license_key": "YOUR_LICENSE_KEY_HERE",
   "log_level": "debug",
   "log_file_path": "/var/logs/newrelic"
 }
